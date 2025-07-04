@@ -9,7 +9,13 @@ const app = express();
 
 const PORT = process.env.PORT
 
-app.use("/api/auth", authRoutes);
+// app.use() is a method used to set up middleware in your Express app.
+// - For e.g. Whenever a request comes in from the client, use this function or feature.
+
+
+app.use(express.json());   //  This allows your app to understand JSON data from the client.
+
+app.use("/api/auth", authRoutes);    // This means: When the URL starts with /api/auth, go to userRoutes.
 
 app.listen(5001, () => {
     console.log(`Server is running on port http://localhost:${PORT}/`);
