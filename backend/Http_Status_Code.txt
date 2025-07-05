@@ -1,0 +1,5 @@
+Information about HTTP Status Codes:
+
+Use 200 for successful requests that return data.
+Use 201 when you successfully create something new.
+Use 500 for unexpected server errors.

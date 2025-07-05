@@ -1,0 +1,9 @@
+Purpose: Defines the API endpoints (URLs) your backend responds to.
+
+Files:
+
+auth.route.js: Endpoints for authentication (login, signup).
+
+message.route.js: Endpoints for sending/receiving messages.
+
+Think of it as: The map that connects URLs to the right controller functions

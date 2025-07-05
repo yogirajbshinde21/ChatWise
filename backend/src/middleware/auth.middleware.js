@@ -5,6 +5,8 @@ import User from '../models/user.model.js';
 
 export const protectRoute = async (req,res,next) => {   // 'next' parameter refers to 'updateProfile' function in auth.route.js file
 
+    // Authentication logic
+
     try{
         const token = req.cookies.jwt;
 
@@ -26,7 +28,8 @@ export const protectRoute = async (req,res,next) => {   // 'next' parameter refe
 
         req.user = user;
 
-        next();   // Invoking 'updateProfile' function in auth.route.js file after authenticating user.
+        // If the user is authenticated:
+         next();     // ✅ This will pass control to the next function (like your route handler)
 
 
     } catch (error) {

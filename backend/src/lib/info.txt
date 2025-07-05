@@ -1,0 +1,11 @@
+Purpose: Holds utility files and shared code used across your backend.
+
+Common files:
+
+cloudinary.js: Handles image uploads to Cloudinary.
+
+db.js: Manages database connection setup.
+
+utils.js: Helper functions (like generating tokens).
+
+Think of it as: A toolbox for your backend—reusable code that doesn’t fit elsewhere.

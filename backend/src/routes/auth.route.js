@@ -25,4 +25,4 @@ router.get("/check", protectRoute, checkAuth);
 
 
 
-export default router;   // This becomes "authRoutes" (A Router object)
+export default router;   // This becomes "authRoutes" (A Router object) when imported

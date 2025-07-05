@@ -1,0 +1,5 @@
+Purpose: Contains files that handle the main logic for each route.
+
+Example: auth.controller.js manages what happens when a user tries to log in, register, etc.
+
+Think of it as: The “brains” that decide what to do with incoming requests (like login, signup).

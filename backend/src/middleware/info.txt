@@ -1,0 +1,5 @@
+Purpose: Contains functions that run before your main route logic.
+
+Example: auth.middleware.js checks if a user is logged in before allowing access to certain routes.
+
+Think of it as: Security guards or filters that check requests before they reach the main logic
