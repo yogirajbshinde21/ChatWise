@@ -1,0 +1,6 @@
+'axios' handles data fetching.
+-> Used to send HTTP requests (GET, POST, etc.) to your backend or third-party APIs.
+
+
+'zustand' handles data sharing and state management inside your app.
+-> Used to manage global state in your React app, like current user, messages, or theme.
