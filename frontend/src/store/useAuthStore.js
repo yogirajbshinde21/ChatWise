@@ -1,14 +1,15 @@
 import {create} from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
-import axios from "axios";
+// import axios from "axios";
 export const useAuthStore = create((set) => ({
     authUser:null,   //'null' because we don't know whether User is authenticated or not intitially.
     isSigningUp: false,
     isLoggingIn: false,
     isUpdatingProfile: false,
     isCheckingAuth: true,   // Initially, this is 'true' because as user comes on page, it will check the authentication.
-
+    onlineUsers: [],
+    
     checkAuth: async() => {
         try{
             const res = await axiosInstance.get("/auth/check");

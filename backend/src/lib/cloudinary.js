@@ -1,3 +1,5 @@
+// Cloudinary is not a database, it's just a bucket (a storage service) for our images and videos.
+
 import { v2 as cloudinary } from 'cloudinary';
 
 import {config} from 'dotenv';

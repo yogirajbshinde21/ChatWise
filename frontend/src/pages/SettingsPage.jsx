@@ -114,6 +114,7 @@ const SettingsPage = () => {
             </div>
           </div>
         </div>
+        
       </div>
     </div>
   )
