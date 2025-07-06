@@ -9,7 +9,14 @@ import { formatMessageTime } from "../lib/utils";
 
 const ChatContainer = () => {
 
-    const { messages, getMessages, isMessagesLoading, selectedUser } = useChatStore();
+    const { 
+        messages, 
+        getMessages, 
+        isMessagesLoading, 
+        selectedUser, 
+        subscribeToMessages, 
+        unsubscribeFromMessages 
+    } = useChatStore();
     const { authUser } = useAuthStore();
     const messageEndRef = useRef(null);
     
@@ -17,6 +24,18 @@ const ChatContainer = () => {
     useEffect(() => {
         getMessages(selectedUser._id)
     }, [selectedUser._id, getMessages]);  //Whenever selectedUser Id changes, get their messages.
+
+    useEffect(() => {
+        subscribeToMessages();
+
+        return () => unsubscribeFromMessages();
+    }, [selectedUser._id, subscribeToMessages, unsubscribeFromMessages]);
+
+    useEffect(() => {
+        if (messageEndRef.current && messages) {
+            messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]);
 
 
      if (isMessagesLoading) {

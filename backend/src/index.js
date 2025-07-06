@@ -14,11 +14,11 @@ import dotenv from "dotenv";
 import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-
+import { app, server} from "./lib/socket.js";
 
 
 dotenv.config();
-const app = express();
+// const app = express();   // delete this, as we have already imported this in socket.js
 
 const PORT = process.env.PORT;
 
@@ -40,7 +40,7 @@ app.use("/api/auth", authRoutes);    // This means: When the URL starts with /ap
 app.use("/api/messages", messageRoutes);    // This is for messages.
 
 
-app.listen(5001, () => {
+server.listen(5001, () => {
     console.log(`Server is running on port http://localhost:${PORT}/`);
     connectDB();
 })
