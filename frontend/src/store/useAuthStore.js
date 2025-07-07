@@ -3,6 +3,7 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 // import axios from "axios";
 import { io } from "socket.io-client";
+import { useChatStore } from "./useChatStore.js";  // Importing useChatStore to access its methods in updateProfile socket.io
 
 
 const BASE_URL = "http://localhost:5001";
@@ -82,6 +83,7 @@ export const useAuthStore = create((set, get) => ({
             const res = await axiosInstance.put("/auth/update-profile", data);  // Update user info on the server
             set({ authUser: res.data });  // Update UI with new data
             toast.success("Profile updated successfully.");
+            get().connectSocket();
         } catch (error) {
             toast.error(error.response?.data?.message || "Profile update failed");
         } finally {
@@ -107,11 +109,27 @@ export const useAuthStore = create((set, get) => ({
 
         socket.on("getOnlineUsers", (userIds) => {
             set({ onlineUsers: userIds });
-        })
+        });
+
+        socket.on("profileUpdated", (data) => {
+            const chatStore = useChatStore.getState();
+            chatStore.updateUserProfile(data.userId, data.profilePic);
+
+            // Update selected user if it matches 
+            if (chatStore.selectedUser?._id === data.userId) {
+                chatStore.setSelectedUser({
+                    ...chatStore.selectedUser,
+                    profilePic: data.profilePic
+                });
+            }
+        });
     },
 
     disconnectSocket: () => {
-        if (get().socket?.connected) get().socket.disconnect();
+        if (get().socket?.connected) {
+            get().socket.off("profileUpdated");
+            get().socket.disconnect();
+        }
     }
 })
 

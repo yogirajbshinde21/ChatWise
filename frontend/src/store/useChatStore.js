@@ -75,7 +75,18 @@ export const useChatStore = create((set, get) => ({
         socket.off("newMessage");
     },
 
+    updateUserProfile: (userId, profilePic) => {
+        set({
+            users: get().users.map(user => 
+                user._id === userId 
+                ? { ...user, profilePic }
+            : user
+        )
+        });
+    },
+
 // Optimize this one later
   setSelectedUser: (selectedUser) => set({ selectedUser }),
+
 
 }));

@@ -50,19 +50,19 @@ const MessageInput = () => {
     };
 
   return (
-    <div className="w-full p-4">
+    <div className="p-3 bg-base-100">
       {imagePreview && (
         <div className="flex items-center gap-2 mb-3">
           <div className="relative">
             <img
               src={imagePreview}
               alt="Preview"
-              className="object-cover w-20 h-20 border rounded-lg border-zinc-700"
+              className="object-cover w-16 h-16 border rounded-lg border-base-300"
             />
             <button
               onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
-              flex items-center justify-center"
+              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-base-300
+              flex items-center justify-center border-2 border-base-100"
               type="button"
             >
               <X className="size-3" />
@@ -71,11 +71,11 @@ const MessageInput = () => {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+      <form onSubmit={handleSendMessage} className="flex items-end gap-2">
         <div className="flex flex-1 gap-2">
           <input
             type="text"
-            className="w-full rounded-lg input input-bordered input-sm sm:input-md"
+            className="flex-1 px-4 py-3 text-base bg-base-200 border-none rounded-full input focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -90,8 +90,8 @@ const MessageInput = () => {
 
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
+            className={`btn btn-circle btn-ghost
+                     ${imagePreview ? "text-emerald-500" : "text-base-content/60"}`}
             onClick={() => fileInputRef.current?.click()}
           >
             <Image size={20} />
@@ -99,10 +99,10 @@ const MessageInput = () => {
         </div>
         <button
           type="submit"
-          className="btn btn-sm btn-circle"
+          className="btn btn-circle btn-primary"
           disabled={!text.trim() && !imagePreview}
         >
-          <Send size={22} />
+          <Send size={20} />
         </button>
       </form>
     </div>

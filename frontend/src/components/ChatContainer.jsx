@@ -15,10 +15,16 @@ const ChatContainer = () => {
         isMessagesLoading, 
         selectedUser, 
         subscribeToMessages, 
-        unsubscribeFromMessages 
+        unsubscribeFromMessages,
+        users
     } = useChatStore();
     const { authUser } = useAuthStore();
     const messageEndRef = useRef(null);
+    
+    // Get the most up-to-date user data from users array
+    const getCurrentUser = (userId) => {
+        return users.find(user => user._id === userId) || selectedUser;
+    };
     
 
     useEffect(() => {
@@ -49,10 +55,10 @@ const ChatContainer = () => {
   }
   
     return (
-     <div className="flex flex-col flex-1 overflow-auto">
+     <div className="flex flex-col flex-1 h-full overflow-hidden">
       <ChatHeader />
 
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      <div className="flex-1 p-3 space-y-3 overflow-y-auto bg-base-200/50">
         {messages.map((message, index) => (
           <div
             key={message._id}
@@ -60,15 +66,16 @@ const ChatContainer = () => {
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             
           >
-            <div className=" chat-image avatar">
-              <div className="border rounded-full size-10">
+            <div className="chat-image avatar">
+              <div className="border rounded-full size-8 sm:size-10">
                 <img
                   src={
                     message.senderId === authUser._id
                       ? authUser.profilePic || "../assets/avatar.png"
-                      : selectedUser.profilePic || "./assets/avatar.png"
+                      : getCurrentUser(message.senderId).profilePic || "./assets/avatar.png"
                   }
                   alt="profile pic"
+                  className="object-cover w-full h-full rounded-full"
                 />
               </div>
             </div>
@@ -77,15 +84,16 @@ const ChatContainer = () => {
                 {formatMessageTime(message.createdAt)}
               </time>
             </div>
-            <div className="flex flex-col chat-bubble">
+            <div className="flex flex-col max-w-xs sm:max-w-md chat-bubble">
               {message.image && (
                 <img
                   src={message.image}
                   alt="Attachment"
-                  className="sm:max-w-[200px] rounded-md mb-2"
+                  className="max-w-[200px] sm:max-w-[280px] max-h-[200px] sm:max-h-[300px] object-cover rounded-md mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(message.image, '_blank')}
                 />
               )}
-              {message.text && <p>{message.text}</p>}
+              {message.text && <p className="break-words">{message.text}</p>}
             </div>
           </div>
         ))}

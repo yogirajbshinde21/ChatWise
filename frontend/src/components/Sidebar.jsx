@@ -20,11 +20,11 @@ const Sidebar = () => {
 
 
   return (
-     <aside className="flex flex-col w-20 h-full transition-all duration-200 border-r lg:w-72 border-base-300">
-      <div className="w-full p-5 border-b border-base-300">
-        <div className="flex items-center gap-2">
+     <aside className="flex flex-col w-full h-full transition-all duration-200 border-r lg:w-72 border-base-300">
+      <div className="w-full p-4 border-b border-base-300">
+        <div className="flex items-center gap-3">
           <Users className="size-6" />
-          <span className="hidden font-medium lg:block">Contacts</span>
+          <span className="text-lg font-medium">Chats</span>
         </div>
         {/* TODO: Online filter toggle */}
         {/* <div className="items-center hidden gap-2 mt-3 lg:flex">
@@ -41,18 +41,18 @@ const Sidebar = () => {
         </div> */}
       </div>
 
-      <div className="w-full py-3 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {users.map((user) => (
           <button
             key={user._id}
             onClick={() => setSelectedUser(user)}
             className={`
-              w-full p-3 flex items-center gap-3
-              hover:bg-base-300 transition-colors
-              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+              w-full p-4 flex items-center gap-3
+              hover:bg-base-300 transition-colors active:bg-base-300
+              ${selectedUser?._id === user._id ? "bg-base-300" : ""}
             `}
           >
-            <div className="relative mx-auto lg:mx-0">
+            <div className="relative flex-shrink-0">
               <img
                 src={user.profilePic || "../assets/avatar.png"}
                 alt={user.name}
@@ -60,24 +60,26 @@ const Sidebar = () => {
               />
               {onlineUsers.includes(user._id) && (
                 <span
-                  className="absolute bottom-0 right-0 bg-green-500 rounded-full size-3 ring-2 ring-zinc-900"
+                  className="absolute bottom-0 right-0 bg-green-500 rounded-full size-3 ring-2 ring-white"
                 />
               )}
             </div>
 
-            {/* User info - only visible on larger screens */}
-            <div className="hidden min-w-0 text-left lg:block">
-              <div className="font-medium truncate">{user.fullName}</div>
-              <div className="text-sm text-zinc-400">
+            {/* User info */}
+            <div className="flex-1 min-w-0 text-left">
+              <div className="font-medium truncate text-base">{user.fullName}</div>
+              <div className="text-sm text-base-content/70">
                 {onlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
           </button>
         ))}
 
-        {/* {filteredUsers.length === 0 && (
-          <div className="py-4 text-center text-zinc-500">No online users</div>
-        )} */}
+        {users.length === 0 && (
+          <div className="flex items-center justify-center h-32">
+            <p className="text-base-content/60">No contacts yet</p>
+          </div>
+        )}
       </div>
     </aside>
   )

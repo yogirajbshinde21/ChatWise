@@ -2,6 +2,9 @@ import cloudinary from "../lib/cloudinary.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import { Socket } from "socket.io";
+import { io } from "../lib/socket.js";  
+
 
 export const signup = async (req,res) => {
     // res.send("Signup route");
@@ -123,6 +126,14 @@ export const updateProfile = async(req, res) => {
 
         const uploadResponse = await cloudinary.uploader.upload(profilePic);
         const updatedUser = await User.findByIdAndUpdate(userId, {profilePic:uploadResponse.secure_url}, {new:true});
+
+        // Real-time profile update notification using socket.io
+        // Why io.emit() instead of io.to(socketId).emit()?
+        // because we want to notify all users about the profile update, not just the user who updated their profile.
+        io.emit("profileUpdated", {
+            userId: updatedUser._id,
+            profilePic: updatedUser.profilePic
+        });
 
         res.status(200).json(updatedUser);
 
