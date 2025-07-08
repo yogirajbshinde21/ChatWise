@@ -1,4 +1,4 @@
-# ChatWise - AI-Powered Group Chat App
+# ChatWise - AI-Powered Chatting App
 
 A modern, full-stack real-time chat application that combines instant messaging with intelligent AI summaries. Built with the MERN stack and enhanced with Google Gemini AI for smart group conversation insights. Features responsive design, secure authentication, and seamless group management.
 
