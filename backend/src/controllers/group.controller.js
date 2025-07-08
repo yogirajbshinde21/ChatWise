@@ -78,7 +78,10 @@ export const createGroup = async (req, res) => {
             if (member._id.toString() !== adminId.toString()) {
                 const memberSocketId = getReceiverSocketId(member._id);
                 if (memberSocketId) {
+                    console.log(`🔔 Emitting newGroup event to member: ${member.fullName}`);
                     io.to(memberSocketId).emit("newGroup", populatedGroup);
+                } else {
+                    console.log(`⚠️  No socket found for member: ${member.fullName}`);
                 }
             }
         });
@@ -185,11 +188,19 @@ export const addMembersToGroup = async (req, res) => {
             .populate("admin", "fullName profilePic")
             .populate("members", "fullName profilePic");
 
-        // Emit real-time event to all members
+        // Emit real-time events to members
         updatedGroup.members.forEach(member => {
             const memberSocketId = getReceiverSocketId(member._id);
             if (memberSocketId) {
-                io.to(memberSocketId).emit("groupUpdated", updatedGroup);
+                // For newly added members, emit "newGroup" event
+                if (newMembers.includes(member._id.toString())) {
+                    console.log(`🔔 Emitting newGroup event to newly added member: ${member.fullName}`);
+                    io.to(memberSocketId).emit("newGroup", updatedGroup);
+                } else {
+                    // For existing members, emit "groupUpdated" event
+                    console.log(`🔔 Emitting groupUpdated event to existing member: ${member.fullName}`);
+                    io.to(memberSocketId).emit("groupUpdated", updatedGroup);
+                }
             }
         });
 

@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 // import axios from "axios";
 import { io } from "socket.io-client";
 import { useChatStore } from "./useChatStore.js";  // Importing useChatStore to access its methods in updateProfile socket.io
+import { useGroupStore } from "./useGroupStore.js";  // Importing useGroupStore to pass socket instance
 
 
 const BASE_URL = "http://localhost:5001";
@@ -123,10 +124,19 @@ export const useAuthStore = create((set, get) => ({
                 });
             }
         });
+
+        // Pass socket to group store and subscribe to group events
+        const groupStore = useGroupStore.getState();
+        groupStore.setSocket(socket);
+        groupStore.subscribeToGroupEvents();
     },
 
     disconnectSocket: () => {
         if (get().socket?.connected) {
+            // Unsubscribe from group events
+            const groupStore = useGroupStore.getState();
+            groupStore.unsubscribeFromGroupEvents();
+            
             get().socket.off("profileUpdated");
             get().socket.disconnect();
         }

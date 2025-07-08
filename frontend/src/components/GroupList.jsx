@@ -49,6 +49,15 @@ const GroupList = () => {
         getUserGroups();
     }, [getUserGroups]);
 
+    // Ensure socket subscription for real-time updates when GroupList is active
+    useEffect(() => {
+        const { socket, subscribeToGroupEvents } = useGroupStore.getState();
+        if (socket) {
+            console.log("🔄 GroupList: Ensuring group events subscription");
+            subscribeToGroupEvents();
+        }
+    }, []);
+
     const handleCreateGroup = async (e) => {
         e.preventDefault();
         

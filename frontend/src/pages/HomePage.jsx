@@ -35,8 +35,12 @@ const HomePage = () => {
   useEffect(() => {
     if (socket) {
       // Set socket in group store for real-time updates
-      const { setSocket } = useGroupStore.getState();
+      const { setSocket, subscribeToGroupEvents } = useGroupStore.getState();
       setSocket(socket);
+      
+      // Subscribe to group events to ensure real-time updates even when not in GroupChatRoom
+      console.log("🔄 HomePage: Subscribing to group events for real-time updates");
+      subscribeToGroupEvents();
     }
   }, [socket]);
 

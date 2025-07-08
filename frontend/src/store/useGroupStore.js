@@ -199,11 +199,14 @@ export const useGroupStore = create((set, get) => ({
     // Real-time event handlers
     subscribeToGroupEvents: () => {
         const socket = get().socket;
-        if (!socket) return;
+        if (!socket) {
+            console.log("⚠️ No socket available for group events subscription");
+            return;
+        }
 
         console.log("🔄 Subscribing to group events...");
 
-        // Clean up any existing listeners first
+        // Clean up any existing listeners first to prevent duplicates
         socket.off("newGroup");
         socket.off("groupUpdated");
         socket.off("groupDeleted");
@@ -218,6 +221,11 @@ export const useGroupStore = create((set, get) => ({
                 groups: [group, ...state.groups],
             }));
             toast.success(`You've been added to group: ${group.name}`);
+            
+            // Refresh the groups list to ensure we have the latest data
+            setTimeout(() => {
+                get().getUserGroups();
+            }, 1000);
         });
 
         // Listen for group updates
@@ -305,8 +313,12 @@ export const useGroupStore = create((set, get) => ({
 
     unsubscribeFromGroupEvents: () => {
         const socket = get().socket;
-        if (!socket) return;
+        if (!socket) {
+            console.log("⚠️ No socket available for group events unsubscription");
+            return;
+        }
 
+        console.log("🔄 Unsubscribing from group events...");
         socket.off("newGroup");
         socket.off("groupUpdated");
         socket.off("groupDeleted");
