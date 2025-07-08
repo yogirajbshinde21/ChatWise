@@ -32,10 +32,13 @@ app.use(express.json());   //  This allows your app to understand JSON data from
 
 app.use(cookieParser());
 
+// Updated CORS for production
 app.use(cors({
-     origin: "http://localhost:5173",
-     credentials: true
-}))
+    origin: process.env.NODE_ENV === "production" 
+        ? process.env.FRONTEND_URL || "https://your-frontend-domain.onrender.com"
+        : "http://localhost:5173",
+    credentials: true
+}));
 
 
 app.use("/api/auth", authRoutes);    // This means: When the URL starts with /api/auth, go to userRoutes.
@@ -52,7 +55,8 @@ if(process.env.NODE_ENV === "production") {
     });
 }
 
-server.listen(5001, () => {
+// Use environment PORT instead of hardcoded 5001
+server.listen(PORT, () => {
     console.log(`Server is running on port http://localhost:${PORT}/`);
     connectDB();
 })
