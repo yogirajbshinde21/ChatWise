@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
     "seed": "node src/scripts/seedDemoUser.js"
   },
   "keywords": [],
@@ -20,6 +21,7 @@
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mern-real-time-chat-app": "file:..",
     "mongoose": "^8.16.1",
     "socket.io": "^4.8.1"
   },

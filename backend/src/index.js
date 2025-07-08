@@ -16,15 +16,13 @@ import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { app, server} from "./lib/socket.js";
-import { validateEnvironment } from "./lib/validateEnv.js";
+import path from "path";  // This is used to serve static files like images, videos, etc. in Express.js
 
-// Load and validate environment variables
 dotenv.config();
-validateEnvironment();
 // const app = express();   // delete this, as we have already imported this in socket.js
 
 const PORT = process.env.PORT;
-
+const __dirname = path.resolve();  // This is used to get the current directory path, which is useful for serving static files.
 // app.use() is a method used to set up middleware in your Express app.
 // - For e.g. Whenever a request comes in from the client, use this function or feature.
 
@@ -43,6 +41,15 @@ app.use("/api/auth", authRoutes);    // This means: When the URL starts with /ap
 app.use("/api/messages", messageRoutes);    // This is for messages.
 app.use("/api/groups", groupRoutes);    // This is for groups.
 
+if(process.env.NODE_ENV === "production") {
+    // Serve static files from the React app
+    app.use(express.static(path.join(__dirname, "../frontend/dist")));  // This is used to serve static files like images, videos, etc. in Express.js
+
+    // Handle any requests that don't match the above routes
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    });
+}
 
 server.listen(5001, () => {
     console.log(`Server is running on port http://localhost:${PORT}/`);
