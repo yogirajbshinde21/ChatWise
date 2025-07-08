@@ -259,7 +259,7 @@ const LandingPage = () => {
             {/* Main Heading with enhanced typography */}
             <h1 className="mb-4 text-3xl font-bold tracking-tight sm:mb-6 sm:text-5xl lg:text-6xl xl:text-7xl">
               <span className="text-transparent bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text animate-pulse">
-                Chatwise
+                ChatWise
               </span>
               <br />
               <span className="text-lg font-medium text-base-content/90 sm:text-2xl lg:text-3xl xl:text-4xl">
@@ -607,7 +607,7 @@ const LandingPage = () => {
               {/* Call to Action */}
               <div className="mt-6 text-center sm:mt-8">
                 <a
-                  href="https://github.com/yogirajbshinde21/Chatwise"
+                  href="https://github.com/yogirajbshinde21/ChatWise"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:scale-105 sm:px-6 sm:py-3 sm:text-base"
@@ -703,7 +703,7 @@ const LandingPage = () => {
                 <MessageSquare className="w-6 h-6 text-primary sm:w-8 sm:h-8" />
               </div>
               <span className="text-2xl font-bold text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text sm:text-3xl">
-                Chatwise
+                ChatWise
               </span>
             </div>
             
@@ -732,7 +732,7 @@ const LandingPage = () => {
             </div>
             
             <div className="pt-6 text-center border-t border-base-300/50 text-base-content/60 sm:pt-8">
-              <p className="text-xs sm:text-sm">© 2024 Chatwise. Built with ❤️ for modern teams.</p>
+              <p className="text-xs sm:text-sm">© 2024 ChatWise. Built with ❤️ for modern teams.</p>
             </div>
           </div>
         </div>
