@@ -20,24 +20,11 @@ import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
 import { GoogleGenAI } from "@google/genai";
-
-// Initialize Google Gemini AI with API key from environment variables
-let ai = null;
-if (process.env.GEMINI_API_KEY) {
-    ai = new GoogleGenAI({ 
-        apiKey: process.env.GEMINI_API_KEY 
-    });
-} else {
-    console.error("⚠️  GEMINI_API_KEY is not set in environment variables");
-    console.error("⚠️  Group summaries will not work without this API key");
-    console.error("⚠️  Please add GEMINI_API_KEY to your .env file");
-}
-
-// Validate API key on startup
-if (!process.env.GEMINI_API_KEY) {
-    console.error("⚠️  GEMINI_API_KEY is not set in environment variables");
-    console.error("⚠️  Group summaries will not work without this API key");
-}
+import dotenv from "dotenv";
+dotenv.config();
+// Initialize Google Gemini AI with API key
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Create a new group (any authenticated user can create)
 export const createGroup = async (req, res) => {
@@ -78,10 +65,7 @@ export const createGroup = async (req, res) => {
             if (member._id.toString() !== adminId.toString()) {
                 const memberSocketId = getReceiverSocketId(member._id);
                 if (memberSocketId) {
-                    console.log(`🔔 Emitting newGroup event to member: ${member.fullName}`);
                     io.to(memberSocketId).emit("newGroup", populatedGroup);
-                } else {
-                    console.log(`⚠️  No socket found for member: ${member.fullName}`);
                 }
             }
         });
@@ -188,19 +172,11 @@ export const addMembersToGroup = async (req, res) => {
             .populate("admin", "fullName profilePic")
             .populate("members", "fullName profilePic");
 
-        // Emit real-time events to members
+        // Emit real-time event to all members
         updatedGroup.members.forEach(member => {
             const memberSocketId = getReceiverSocketId(member._id);
             if (memberSocketId) {
-                // For newly added members, emit "newGroup" event
-                if (newMembers.includes(member._id.toString())) {
-                    console.log(`🔔 Emitting newGroup event to newly added member: ${member.fullName}`);
-                    io.to(memberSocketId).emit("newGroup", updatedGroup);
-                } else {
-                    // For existing members, emit "groupUpdated" event
-                    console.log(`🔔 Emitting groupUpdated event to existing member: ${member.fullName}`);
-                    io.to(memberSocketId).emit("groupUpdated", updatedGroup);
-                }
+                io.to(memberSocketId).emit("groupUpdated", updatedGroup);
             }
         });
 
@@ -458,12 +434,6 @@ export const getGroupSummary = async (req, res) => {
 // Helper function to generate AI summary using Google Gemini API
 async function generateGeminiSummary(messageTexts, groupName, mode) {
     try {
-        // Check if AI is initialized (API key is available)
-        if (!ai) {
-            console.error("❌ Gemini AI is not initialized - API key missing");
-            throw new Error("Gemini API key is not configured");
-        }
-
         console.log("🤖 Calling Google Gemini API for summary generation...");
         
         const modeDescription = mode === 'previousDay' ? 'from the previous day' : 'since your last visit';
