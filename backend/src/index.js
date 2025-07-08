@@ -40,6 +40,16 @@ app.use(cors({
     credentials: true
 }));
 
+// Test route to verify backend is working
+app.get("/api/test", (req, res) => {
+    res.json({ 
+        message: "Backend is working!", 
+        nodeEnv: process.env.NODE_ENV,
+        corsOrigin: process.env.NODE_ENV === "production" 
+            ? "https://chatwise-frontend.onrender.com" 
+            : "http://localhost:5173"
+    });
+});
 
 app.use("/api/auth", authRoutes);    // This means: When the URL starts with /api/auth, go to userRoutes.
 app.use("/api/messages", messageRoutes);    // This is for messages.
