@@ -49,15 +49,6 @@ const GroupList = () => {
         getUserGroups();
     }, [getUserGroups]);
 
-    // Ensure socket subscription for real-time updates when GroupList is active
-    useEffect(() => {
-        const { socket, subscribeToGroupEvents } = useGroupStore.getState();
-        if (socket) {
-            console.log("🔄 GroupList: Ensuring group events subscription");
-            subscribeToGroupEvents();
-        }
-    }, []);
-
     const handleCreateGroup = async (e) => {
         e.preventDefault();
         
@@ -191,7 +182,7 @@ const GroupList = () => {
                                                 e.stopPropagation();
                                                 handleViewSummary(group);
                                             }}
-                                            className="btn btn-xs btn-ghost opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="btn btn-xs btn-ghost opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                             title="View Summary"
                                         >
                                             📄 Summary
@@ -202,7 +193,7 @@ const GroupList = () => {
                                                 e.stopPropagation();
                                                 setSelectedGroup(group);
                                             }}
-                                            className="btn btn-xs btn-ghost opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="btn btn-xs btn-ghost opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                             title="Open Chat"
                                         >
                                             <MessageCircle className="w-3 h-3" />

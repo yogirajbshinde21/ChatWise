@@ -21,7 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGroupStore } from "../store/useGroupStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
-import { Users, Send, Image as ImageIcon, Crown, UserPlus, UserMinus, Settings, X, ArrowLeft, Lightbulb, Info } from "lucide-react";
+import { Users, Send, Image as ImageIcon, Crown, UserPlus, UserMinus, Settings, X, ArrowLeft } from "lucide-react";
 import { formatMessageTime } from "../lib/utils";
 
 const GroupChatRoom = () => {
@@ -235,8 +235,8 @@ const GroupChatRoom = () => {
 
     return (
         <div className="flex-1 flex flex-col h-full">
-            {/* Group Header */}
-            <div className="border-b border-base-300 p-3 sm:p-4">
+            {/* Group Header - Sticky on mobile */}
+            <div className="border-b border-base-300 p-3 sm:p-4 sticky top-0 bg-base-100 z-10 sm:static sm:z-auto">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                         {/* Back button for mobile */}
@@ -331,14 +331,13 @@ const GroupChatRoom = () => {
                                         <img
                                             src={message.image}
                                             alt="Shared image"
-                                            className="rounded-lg w-full max-w-[200px] sm:max-w-[280px] max-h-[200px] sm:max-h-[300px] object-cover mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                            className="rounded-lg max-w-full mb-2 cursor-pointer hover:opacity-90 transition-opacity"
                                             onClick={() => window.open(message.image, '_blank')}
                                         />
                                     )}
                                     {message.text && <p className="text-sm sm:text-base">{message.text}</p>}
                                     {message.isChatty && (
-                                        <div className="badge badge-primary badge-sm mt-1 gap-1">
-                                            <Lightbulb className="w-3 h-3" />
+                                        <div className="badge badge-primary badge-sm mt-1">
                                             Chatty
                                         </div>
                                     )}
@@ -391,35 +390,14 @@ const GroupChatRoom = () => {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-base-300">
-                {/* !Chatty Feature Suggestion */}
-                <div className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-base-200">
-                    <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/70">
-                        <Lightbulb className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 animate-pulse" />
-                        <span>
-                            Tip: Use{" "}
-                            <span className="font-mono bg-primary/10 px-1.5 py-0.5 rounded text-primary font-semibold border border-primary/20">
-                                !Chatty
-                            </span>{" "}
-                            in your message for AI summaries
-                        </span>
-                        <div 
-                            className="tooltip tooltip-top tooltip-primary" 
-                            data-tip="💡 Messages containing '!Chatty' will be included in AI-generated group summaries. Perfect for important announcements, decisions, or key discussions you want to highlight! Example: '!Chatty Don't forget about tomorrow's meeting at 2 PM'"
-                        >
-                            <Info className="w-3 h-3 sm:w-4 sm:h-4 text-primary/70 hover:text-primary cursor-help transition-colors" />
-                        </div>
-                    </div>
-                </div>
-                
-                <form onSubmit={handleSendMessage} className="p-3 sm:p-4">
+            <form onSubmit={handleSendMessage} className="border-t border-base-300 p-3 sm:p-4">
                 {selectedImage && (
                     <div className="mb-3">
                         <div className="relative inline-block">
                             <img
                                 src={selectedImage}
                                 alt="Preview"
-                                className="w-16 h-16 sm:w-20 sm:h-20 max-w-[80px] max-h-[80px] object-cover rounded-lg border border-base-300"
+                                className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg"
                             />
                             <button
                                 type="button"
@@ -450,26 +428,13 @@ const GroupChatRoom = () => {
                         <ImageIcon className="w-4 h-4" />
                     </button>
                     
-                    <div className="flex-1 relative">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type a message..."
-                            className={`input input-bordered w-full text-sm sm:text-base ${
-                                newMessage.toLowerCase().includes('!chatty') 
-                                    ? 'border-primary bg-primary/5 placeholder-primary/50' 
-                                    : ''
-                            }`}
-                        />
-                        {newMessage.toLowerCase().includes('!chatty') && (
-                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                                <div className="tooltip tooltip-left" data-tip="AI Summary Ready! 🤖">
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="input input-bordered flex-1 text-sm sm:text-base"
+                    />
                     
                     <button
                         type="submit"
@@ -480,7 +445,6 @@ const GroupChatRoom = () => {
                     </button>
                 </div>
             </form>
-            </div>
 
             {/* Member List Modal */}
             {showMemberList && (
