@@ -21,7 +21,8 @@ import path from "path";  // This is used to serve static files like images, vid
 dotenv.config();
 // const app = express();   // delete this, as we have already imported this in socket.js
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5001;  // This is the port on which your server will run. If PORT is not defined in .env, it will default to 5001.
+
 const __dirname = path.resolve();  // This is used to get the current directory path, which is useful for serving static files.
 // app.use() is a method used to set up middleware in your Express app.
 // - For e.g. Whenever a request comes in from the client, use this function or feature.
