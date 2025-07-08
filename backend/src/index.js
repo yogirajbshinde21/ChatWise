@@ -55,15 +55,7 @@ app.use("/api/auth", authRoutes);    // This means: When the URL starts with /ap
 app.use("/api/messages", messageRoutes);    // This is for messages.
 app.use("/api/groups", groupRoutes);    // This is for groups.
 
-// if(process.env.NODE_ENV === "production") {
-//     // Serve static files from the React app
-//     app.use(express.static(path.join(__dirname, "../frontend/dist")));  // This is used to serve static files like images, videos, etc. in Express.js
 
-//     // Handle any requests that don't match the above routes
-//     app.get("*", (req, res) => {
-//         res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-//     });
-// }
 
 // Use environment PORT instead of hardcoded 5001
 server.listen(PORT, () => {

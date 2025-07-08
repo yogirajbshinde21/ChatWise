@@ -9,9 +9,10 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: process.env.NODE_ENV === "production" 
-            ? ["https://chatwise-frontend.onrender.com"] // Your actual frontend URL
-            : ["http://localhost:5173"],
+            ? "https://chatwise-frontend.onrender.com"
+            : "http://localhost:5173",
         credentials: true,
+        methods: ["GET", "POST"]
     },
 });
 
