@@ -244,7 +244,7 @@ const LandingPage = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center min-h-screen md:min-h-screen bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5">
+      <section className="relative flex items-center justify-center min-h-screen pt-16 md:min-h-screen bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="container relative px-4 py-8 mx-auto sm:py-16 lg:py-24">
           <div className="text-center">
@@ -649,7 +649,7 @@ const LandingPage = () => {
                   <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-primary to-secondary group-hover:opacity-100"></div>
                   <Rocket className="relative z-10 w-5 h-5 sm:w-6 sm:h-6" />
                   <span className="relative z-10">Start Free Account</span>
-                  <ArrowRight className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-2" />
+                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform sm:w-5 sm:h-5 group-hover:translate-x-2" />
                 </Link>
                 <Link
                   to="/login"

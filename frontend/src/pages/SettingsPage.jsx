@@ -51,7 +51,7 @@ const SettingsPage = () => {
         {/* Preview Section */}
         <h3 className="mb-3 text-lg font-semibold">Preview</h3>
         <div className="overflow-hidden border shadow-lg rounded-xl border-base-300 bg-base-100">
-          <div className="p-4 bg-base-200">
+          <div className="p-4 bg-base-100">
             <div className="max-w-lg mx-auto">
               {/* Mock Chat UI */}
               <div className="overflow-hidden shadow-sm bg-base-100 rounded-xl">
