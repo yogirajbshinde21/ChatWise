@@ -6,8 +6,9 @@ import { io } from "socket.io-client";
 import { useChatStore } from "./useChatStore.js";  // Importing useChatStore to access its methods in updateProfile socket.io
 
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";  // Use the base URL for development or production
-
+const BASE_URL = import.meta.env.MODE === "development" 
+    ? "http://localhost:5001" 
+    : "https://chatwise-backend.onrender.com"; // Replace with your actual backend URL
 
 
 export const useAuthStore = create((set, get) => ({
