@@ -1,16 +1,12 @@
-# Dependencies
-frontend/node_modules/
-backend/node_modules/
-node_modules/
-
 # Environment Variables (contains sensitive API keys)
-backend/.env
-frontend/.env
 .env
 .env.local
 .env.development
 .env.test
 .env.production
+
+# Dependencies
+node_modules/
 
 # Logs
 *.log
@@ -44,12 +40,3 @@ coverage/
 # Temporary files
 tmp/
 temp/
-
-# Project specific files
-REALTIME_FIXES_SUMMARY.md
-
-SECURITY.md
-GROUP_CHAT_IMPLEMENTATION.md
-GROUP_CHAT_TEST_SUITE.js
-SYSTEM_ARCHITECTURE.js
-TESTING_EXAMPLES.js

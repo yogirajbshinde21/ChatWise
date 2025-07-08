@@ -17,10 +17,21 @@ const LoginPage = () => {
     login(formData);
   };
 
+  const handleDemoLogin = () => {
+    setFormData({
+      email: "john@gmail.com",
+      password: "123456"
+    });
+    // Automatically submit the form with demo credentials
+    setTimeout(() => {
+      login({ email: "john@gmail.com", password: "123456" });
+    }, 100);
+  };
+
   return (
-    <div className="grid h-screen lg:grid-cols-2">
+    <div className="min-h-screen grid lg:grid-cols-2 pt-20 bg-base-100">
       {/* Left Side - Form */}
-      <div className="flex flex-col items-center justify-center p-6 sm:p-12">
+      <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-base-100 min-h-[calc(100vh-5rem)]">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="mb-8 text-center">
@@ -96,6 +107,32 @@ const LoginPage = () => {
             </button>
           </form>
 
+          {/* Demo Account Section */}
+          <div className="p-4 bg-base-200 rounded-lg">
+            <div className="text-center mb-3">
+              <h3 className="font-semibold text-sm text-base-content/80">Try Demo Account</h3>
+              <p className="text-xs text-base-content/60">Test all features without signing up</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-base-content/70">Email:</span>
+                <span className="font-mono bg-base-300 px-2 py-1 rounded">john@gmail.com</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-base-content/70">Password:</span>
+                <span className="font-mono bg-base-300 px-2 py-1 rounded">123456</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="w-full btn btn-outline btn-sm mt-2"
+                disabled={isLoggingIn}
+              >
+                Use Demo Account
+              </button>
+            </div>
+          </div>
+
           <div className="text-center">
             <p className="text-base-content/60">
               Don&apos;t have an account?{" "}
@@ -108,10 +145,12 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Image/Pattern */}
-      <AuthImagePattern
-        title={"Welcome back!"}
-        subtitle={"Sign in to continue your conversations and catch up with your messages."}
-      />
+      <div className="hidden lg:block bg-base-200 min-h-[calc(100vh-4rem)]">
+        <AuthImagePattern
+          title={"Welcome back!"}
+          subtitle={"Sign in to continue your conversations and catch up with your messages."}
+        />
+      </div>
     </div>
   );
 };

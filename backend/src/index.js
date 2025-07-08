@@ -10,14 +10,17 @@
 import express from "express";         // We changed CommonJS ( A default module type ) ---> "type" : "module" in package.json. So, we can use 'import' now. 'module' is a ES6 module.
 import authRoutes from "./routes/auth.route.js";  // Remaimber to put an extension '.js' at the end, because we are using type as module. 
 import messageRoutes from "./routes/message.route.js";
+import groupRoutes from "./routes/group.route.js";
 import dotenv from "dotenv";
 import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { app, server} from "./lib/socket.js";
+import { validateEnvironment } from "./lib/validateEnv.js";
 
-
+// Load and validate environment variables
 dotenv.config();
+validateEnvironment();
 // const app = express();   // delete this, as we have already imported this in socket.js
 
 const PORT = process.env.PORT;
@@ -38,6 +41,7 @@ app.use(cors({
 
 app.use("/api/auth", authRoutes);    // This means: When the URL starts with /api/auth, go to userRoutes.
 app.use("/api/messages", messageRoutes);    // This is for messages.
+app.use("/api/groups", groupRoutes);    // This is for groups.
 
 
 server.listen(5001, () => {

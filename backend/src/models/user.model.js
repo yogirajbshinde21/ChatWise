@@ -20,6 +20,24 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        // Track last seen timestamp for each group
+        groupLastSeen: {
+            type: Map,
+            of: Date,
+            default: new Map(),
+        },
+        // Track summary history for each group
+        groupSummaryHistory: {
+            type: Map,
+            of: [{
+                summaryText: String,
+                mode: String, // 'previousDay' or 'sinceLastSeen'
+                messageCount: Number,
+                generatedAt: Date,
+                coveredMessageIds: [String] // IDs of messages that were summarized
+            }],
+            default: new Map(),
+        },
     },
     { timestamps: true }
 );
