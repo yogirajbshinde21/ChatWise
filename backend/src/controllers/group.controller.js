@@ -353,33 +353,101 @@ export const getGroupSummary = async (req, res) => {
             !previouslySummarizedIds.has(msg._id.toString())
         );
 
-        if (newMessagesToSummarize.length === 0) {
-            // Return previous summary if no new messages
-            const lastSummary = groupSummaryHistory
-                .filter(s => s.mode === mode)
-                .sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt))[0];
+        // Handle "since last seen" mode - combine all previous summaries with new content
+        if (mode === "sinceLastSeen") {
+            // Get ALL previous summaries for this group (don't filter by date)
+            // This ensures we show all accumulated summaries since the user's last seen
+            const previousSummaries = groupSummaryHistory
+                .filter(s => s.mode === "sinceLastSeen")
+                .sort((a, b) => new Date(a.generatedAt) - new Date(b.generatedAt));
 
-            if (lastSummary) {
+            // If we have new messages to summarize
+            if (newMessagesToSummarize.length > 0) {
+                // Generate summary for new messages
+                const messageTexts = newMessagesToSummarize.map(msg => {
+                    const timestamp = new Date(msg.createdAt).toLocaleString();
+                    const sender = msg.senderId.fullName;
+                    const text = msg.text.replace(/!Chatty\s*/i, '').trim();
+                    return `[${timestamp}] ${sender}: ${text}`;
+                }).join('\n');
+
+                const newSummary = await generateGeminiSummary(messageTexts, group.name, mode);
+
+                // Save the new summary to user's history
+                const newSummaryEntry = {
+                    summaryText: newSummary,
+                    mode: mode,
+                    messageCount: newMessagesToSummarize.length,
+                    generatedAt: new Date(),
+                    coveredMessageIds: newMessagesToSummarize.map(msg => msg._id.toString())
+                };
+
+                groupSummaryHistory.push(newSummaryEntry);
+                
+                // Keep only the last 10 summaries per group to avoid too much data
+                if (groupSummaryHistory.length > 10) {
+                    groupSummaryHistory.splice(0, groupSummaryHistory.length - 10);
+                }
+
+                user.groupSummaryHistory.set(groupId, groupSummaryHistory);
+                await user.save();
+
+                // Combine all summaries (previous + new) in chronological order
+                const allSummaries = [...previousSummaries, newSummaryEntry];
+                const combinedSummary = allSummaries.map((summary, index) => {
+                    const date = new Date(summary.generatedAt).toLocaleDateString();
+                    const time = new Date(summary.generatedAt).toLocaleTimeString();
+                    return `**Update ${index + 1}** (${date} at ${time}):\n${summary.summaryText}`;
+                }).join('\n\n---\n\n');
+
+                const totalMessageCount = allSummaries.reduce((sum, s) => sum + s.messageCount, 0);
+
                 return res.status(200).json({
                     success: true,
-                    summary: lastSummary.summaryText,
-                    messageCount: lastSummary.messageCount,
-                    period: mode === 'previousDay' ? 'Previous Day' : 'Since Last Seen',
-                    generatedAt: lastSummary.generatedAt,
-                    isFromHistory: true
+                    summary: combinedSummary,
+                    messageCount: totalMessageCount,
+                    period: 'Since Last Seen',
+                    generatedAt: newSummaryEntry.generatedAt,
+                    isFromHistory: false,
+                    summaryCount: allSummaries.length
                 });
             } else {
-                return res.status(200).json({
-                    success: true,
-                    summary: `No !Chatty messages found for ${mode === 'previousDay' ? 'previous day' : 'since last seen'}.`,
-                    messageCount: 0,
-                    period: mode === 'previousDay' ? 'Previous Day' : 'Since Last Seen',
-                    generatedAt: new Date(),
-                    isFromHistory: false
-                });
+                // No new messages, return combined previous summaries
+                if (previousSummaries.length > 0) {
+                    const combinedSummary = previousSummaries.map((summary, index) => {
+                        const date = new Date(summary.generatedAt).toLocaleDateString();
+                        const time = new Date(summary.generatedAt).toLocaleTimeString();
+                        return `**Update ${index + 1}** (${date} at ${time}):\n${summary.summaryText}`;
+                    }).join('\n\n---\n\n');
+
+                    const totalMessageCount = previousSummaries.reduce((sum, s) => sum + s.messageCount, 0);
+
+                    return res.status(200).json({
+                        success: true,
+                        summary: combinedSummary,
+                        messageCount: totalMessageCount,
+                        period: 'Since Last Seen',
+                        generatedAt: previousSummaries[previousSummaries.length - 1].generatedAt,
+                        isFromHistory: true,
+                        summaryCount: previousSummaries.length
+                    });
+                } else {
+                    return res.status(200).json({
+                        success: true,
+                        summary: "No !Chatty messages found since last seen.",
+                        messageCount: 0,
+                        period: 'Since Last Seen',
+                        generatedAt: new Date(),
+                        isFromHistory: false,
+                        summaryCount: 0
+                    });
+                }
             }
         }
 
+        // Handle "previousDay" mode (original logic)
+        // This should only run for previousDay mode since sinceLastSeen already returned above
+        
         // Prepare message texts for AI summarization
         const messageTexts = newMessagesToSummarize.map(msg => {
             const timestamp = new Date(msg.createdAt).toLocaleString();
@@ -410,11 +478,8 @@ export const getGroupSummary = async (req, res) => {
         user.groupSummaryHistory.set(groupId, groupSummaryHistory);
         await user.save();
 
-        // Update user's last seen for this group if mode is sinceLastSeen
-        if (mode === "sinceLastSeen") {
-            user.groupLastSeen.set(groupId, new Date());
-            await user.save();
-        }
+        // Don't update lastSeen here - let the user explicitly mark as seen
+        // when they actually read the summary
 
         res.status(200).json({
             success: true,
@@ -428,6 +493,43 @@ export const getGroupSummary = async (req, res) => {
     } catch (error) {
         console.error("Error generating group summary:", error);
         res.status(500).json({ error: "Failed to generate group summary" });
+    }
+};
+
+// Mark summary as read and update lastSeen timestamp
+export const markSummaryAsRead = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const userId = req.user._id;
+
+        // Check if user is member of the group
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ error: "Group not found" });
+        }
+
+        if (!group.isMember(userId)) {
+            return res.status(403).json({ error: "You are not a member of this group" });
+        }
+
+        // Update user's last seen for this group
+        const user = await User.findById(userId);
+        user.groupLastSeen.set(groupId, new Date());
+        
+        // Clear the summary history for this group since the user has now seen it
+        // This ensures the next "sinceLastSeen" summary starts fresh
+        user.groupSummaryHistory.delete(groupId);
+        
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Summary marked as read"
+        });
+
+    } catch (error) {
+        console.error("Error marking summary as read:", error);
+        res.status(500).json({ error: "Failed to mark summary as read" });
     }
 };
 

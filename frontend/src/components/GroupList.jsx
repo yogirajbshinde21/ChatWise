@@ -33,6 +33,7 @@ const GroupList = () => {
         selectedGroup,
         getGroupSummary,
         isGeneratingSummary,
+        markSummaryAsRead,
     } = useGroupStore();
 
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -93,13 +94,13 @@ const GroupList = () => {
     if (isGroupsLoading) {
         return (
             <div className="flex flex-col h-full">
-                <div className="border-b border-base-300 w-full p-5">
+                <div className="w-full p-5 border-b border-base-300">
                     <div className="flex items-center gap-2">
                         <Users className="w-6 h-6" />
                         <h2 className="font-semibold">Groups</h2>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto w-full py-3">
+                <div className="flex-1 w-full py-3 overflow-y-auto">
                     <div className="flex items-center justify-center h-full">
                         <div className="loading loading-spinner loading-lg"></div>
                     </div>
@@ -111,7 +112,7 @@ const GroupList = () => {
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="border-b border-base-300 w-full p-5">
+            <div className="w-full p-5 border-b border-base-300">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Users className="w-6 h-6" />
@@ -128,12 +129,12 @@ const GroupList = () => {
             </div>
 
             {/* Groups List */}
-            <div className="flex-1 overflow-y-auto w-full py-3">
+            <div className="flex-1 w-full py-3 overflow-y-auto">
                 {groups.length === 0 ? (
-                    <div className="text-center p-6">
+                    <div className="p-6 text-center">
                         <Users className="w-16 h-16 mx-auto mb-4 text-base-content/50" />
-                        <h3 className="font-semibold text-lg mb-2">No Groups Yet</h3>
-                        <p className="text-base-content/60 mb-4">
+                        <h3 className="mb-2 text-lg font-semibold">No Groups Yet</h3>
+                        <p className="mb-4 text-base-content/60">
                             Create your first group to start chatting with multiple people
                         </p>
                         <button
@@ -145,7 +146,7 @@ const GroupList = () => {
                         </button>
                     </div>
                 ) : (
-                    <div className="space-y-2 px-3">
+                    <div className="px-3 space-y-2">
                         {groups.map((group) => (
                             <div
                                 key={group._id}
@@ -155,37 +156,37 @@ const GroupList = () => {
                                 onClick={() => setSelectedGroup(group)}
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex items-center min-w-0 gap-3">
                                         <div className="relative">
-                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                                                 <Users className="w-6 h-6 text-primary" />
                                             </div>
                                             {group.admin._id === authUser._id && (
-                                                <Crown className="w-4 h-4 text-yellow-500 absolute -top-1 -right-1" />
+                                                <Crown className="absolute w-4 h-4 text-yellow-500 -top-1 -right-1" />
                                             )}
                                         </div>
                                         
-                                        <div className="min-w-0 flex-1">
-                                            <h3 className="font-semibold text-sm truncate">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-sm font-semibold truncate">
                                                 {group.name}
                                             </h3>
-                                            <p className="text-xs text-base-content/70 flex items-center gap-1">
+                                            <p className="flex items-center gap-1 text-xs text-base-content/70">
                                                 <Users className="w-3 h-3" />
                                                 {group.members.length} members
                                             </p>
                                         </div>
                                     </div>
                                     
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 flex-shrink-0">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleViewSummary(group);
                                             }}
-                                            className="btn btn-xs btn-ghost opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                            className="btn btn-xs btn-ghost opacity-100 transition-opacity"
                                             title="View Summary"
                                         >
-                                            📄 Summary
+                                            📄
                                         </button>
                                         
                                         <button
@@ -193,7 +194,7 @@ const GroupList = () => {
                                                 e.stopPropagation();
                                                 setSelectedGroup(group);
                                             }}
-                                            className="btn btn-xs btn-ghost opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                            className="btn btn-xs btn-ghost opacity-100 transition-opacity"
                                             title="Open Chat"
                                         >
                                             <MessageCircle className="w-3 h-3" />
@@ -210,7 +211,7 @@ const GroupList = () => {
             {showCreateModal && (
                 <div className="modal modal-open">
                     <div className="modal-box">
-                        <h3 className="font-bold text-lg mb-4">Create New Group</h3>
+                        <h3 className="mb-4 text-lg font-bold">Create New Group</h3>
                         
                         <form onSubmit={handleCreateGroup} className="space-y-4">
                             <div>
@@ -219,7 +220,7 @@ const GroupList = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    className="input input-bordered w-full"
+                                    className="w-full input input-bordered"
                                     placeholder="Enter group name"
                                     value={newGroupData.name}
                                     onChange={(e) => setNewGroupData({
@@ -234,7 +235,7 @@ const GroupList = () => {
                                     <span className="label-text">Description (Optional)</span>
                                 </label>
                                 <textarea
-                                    className="textarea textarea-bordered w-full"
+                                    className="w-full textarea textarea-bordered"
                                     placeholder="Enter group description"
                                     value={newGroupData.description}
                                     onChange={(e) => setNewGroupData({
@@ -267,25 +268,44 @@ const GroupList = () => {
             {/* Summary Modal */}
             {showSummaryModal && (
                 <div className="modal modal-open">
-                    <div className="modal-box max-w-2xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg">Group Summary</h3>
-                            <button
-                                onClick={() => {
-                                    setShowSummaryModal(false);
-                                    setSummary(null);
-                                }}
-                                className="btn btn-sm btn-ghost"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                    <div className="max-w-2xl modal-box">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold">Group Summary</h3>
+                            <div className="flex items-center gap-2">
+                                {summary && summaryMode === "sinceLastSeen" && (
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await markSummaryAsRead(summaryGroup._id);
+                                                setShowSummaryModal(false);
+                                                setSummary(null);
+                                                toast.success("Summary marked as read");
+                                            } catch {
+                                                // Error already handled in store
+                                            }
+                                        }}
+                                        className="btn btn-sm btn-primary"
+                                    >
+                                        Mark as Read
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setShowSummaryModal(false);
+                                        setSummary(null);
+                                    }}
+                                    className="btn btn-sm btn-ghost"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                         
                         {summaryGroup && (
                             <div className="mb-4">
-                                <h4 className="font-semibold text-base mb-2">{summaryGroup.name}</h4>
+                                <h4 className="mb-2 text-base font-semibold">{summaryGroup.name}</h4>
                                 
-                                <div className="tabs tabs-boxed mb-4">
+                                <div className="mb-4 tabs tabs-boxed">
                                     <button
                                         className={`tab ${summaryMode === "previousDay" ? "tab-active" : ""}`}
                                         onClick={() => handleSummaryModeChange("previousDay")}
@@ -302,7 +322,7 @@ const GroupList = () => {
                             </div>
                         )}
                         
-                        <div className="bg-base-200 rounded-lg p-4">
+                        <div className="p-4 rounded-lg bg-base-200">
                             {isGeneratingSummary ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="loading loading-spinner loading-lg"></div>
@@ -312,12 +332,64 @@ const GroupList = () => {
                                 <div>
                                     <div className="flex items-center gap-2 mb-3 text-sm text-base-content/70">
                                         <TrendingUp className="w-4 h-4" />
-                                        <span>{summary.messageCount} messages • {summary.period}</span>
+                                        <span>
+                                            {summary.messageCount} messages • {summary.period}
+                                            {summary.summaryCount > 1 && (
+                                                <span className="ml-2 badge badge-primary badge-sm">
+                                                    {summary.summaryCount} updates
+                                                </span>
+                                            )}
+                                            {summary.isFromHistory && (
+                                                <span className="ml-2 badge badge-secondary badge-sm">
+                                                    From history
+                                                </span>
+                                            )}
+                                        </span>
                                     </div>
-                                    <p className="text-sm leading-relaxed">{summary.summary}</p>
+                                    <div className="text-sm leading-relaxed">
+                                        {summary.summaryCount > 1 ? (
+                                            // Multiple updates - render with proper formatting
+                                            <div className="space-y-4">
+                                                {summary.summary.split('\n\n---\n\n').map((updateSection, index) => (
+                                                    <div key={index} className="p-3 border-l-4 border-primary/30 bg-base-100 rounded-r-lg">
+                                                        {updateSection.split('\n').map((line, lineIndex) => {
+                                                            if (line.startsWith('**Update')) {
+                                                                // Extract update header
+                                                                const headerMatch = line.match(/\*\*Update (\d+)\*\* \(([^)]+)\):/);
+                                                                if (headerMatch) {
+                                                                    return (
+                                                                        <div key={lineIndex} className="mb-2">
+                                                                            <span className="font-semibold text-primary">
+                                                                                Update {headerMatch[1]}
+                                                                            </span>
+                                                                            <span className="ml-2 text-xs text-base-content/60">
+                                                                                {headerMatch[2]}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            } else if (line.trim()) {
+                                                                // Regular content line
+                                                                return (
+                                                                    <div key={lineIndex} className="mb-1">
+                                                                        {line}
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            // Single update - render normally
+                                            <div className="whitespace-pre-wrap">{summary.summary}</div>
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="text-center py-8 text-base-content/60">
+                                <div className="py-8 text-center text-base-content/60">
                                     <TrendingUp className="w-12 h-12 mx-auto mb-2" />
                                     <p>Click on a mode to generate summary</p>
                                 </div>
