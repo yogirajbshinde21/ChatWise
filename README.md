@@ -4,7 +4,9 @@ A modern, full-stack real-time chat application that combines instant messaging 
 
 ## 🎥 Demo Video
 
-*[Demo video placeholder - Add your video link here]*
+
+https://github.com/user-attachments/assets/76318e37-a9f7-4d11-8cdc-eb2b85058872
+
 
 ## ⚡ Key Features
 
