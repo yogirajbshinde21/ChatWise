@@ -24,7 +24,7 @@ import dotenv from "dotenv";
 dotenv.config();
 // Initialize Google Gemini AI with API key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Create a new group (any authenticated user can create)
 export const createGroup = async (req, res) => {
@@ -534,9 +534,10 @@ ${messageTexts}
 
 Provide a direct, clean summary of ONLY the above messages without any prefixes or made-up content:`;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash-exp",
-            contents: prompt,
+        // Call Gemini API to generate summary
+        const result = await genAI.models.generateContent({
+            model: "gemini-2.5-flash",  // Using Gemini 2.0 Flash (experimental)
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: {
                 temperature: 0.3, // Lower temperature for more focused, less creative responses
                 topP: 0.8,
@@ -545,7 +546,7 @@ Provide a direct, clean summary of ONLY the above messages without any prefixes 
             }
         });
 
-        let summaryText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        let summaryText = result.text?.trim();
         
         if (!summaryText) {
             throw new Error("Empty response from Gemini API");

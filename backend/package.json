@@ -8,7 +8,10 @@
     "add-avatars": "node src/scripts/addDefaultAvatars.js",
     "check-avatars": "node src/scripts/checkUserAvatars.js",
     "test-avatar": "node src/scripts/testAvatarSignup.js",
-    "create-demo": "node src/scripts/createDemoAccount.js"
+    "create-demo": "node src/scripts/createDemoAccount.js",
+    "test-chatty": "node src/scripts/testChattyFeature.js",
+    "diagnose-chatty": "node src/scripts/diagnoseChatty.js",
+    "test-gemini": "node src/scripts/testGeminiAPI.js"
   },
   "keywords": [],
   "author": "",
