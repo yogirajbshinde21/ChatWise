@@ -37,7 +37,10 @@ app.use(cors({
     origin: process.env.NODE_ENV === "production" 
         ? "https://frontend-chatwise.onrender.com" // Your actual frontend URL
         : "http://localhost:5173",
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["set-cookie"]
 }));
 
 // Test route to verify backend is working
