@@ -35,7 +35,7 @@ app.use(cookieParser());
 // Updated CORS for production
 app.use(cors({
     origin: process.env.NODE_ENV === "production" 
-        ? "https://chatwise-frontend.onrender.com" // Your actual frontend URL
+        ? "https://frontend-chatwise.onrender.com" // Your actual frontend URL
         : "http://localhost:5173",
     credentials: true
 }));
@@ -46,7 +46,7 @@ app.get("/api/test", (req, res) => {
         message: "Backend is working!", 
         nodeEnv: process.env.NODE_ENV,
         corsOrigin: process.env.NODE_ENV === "production" 
-            ? "https://chatwise-frontend.onrender.com" 
+            ? "https://frontend-chatwise.onrender.com" 
             : "http://localhost:5173"
     });
 });

@@ -8,7 +8,7 @@ import { useChatStore } from "./useChatStore.js";  // Importing useChatStore to 
 
 const BASE_URL = import.meta.env.MODE === "development" 
     ? "http://localhost:5001" 
-    : "https://chatwise-backend.onrender.com"; // Point to your backend service
+    : "https://backend-chatwise.onrender.com"; // Point to your backend service
 
 
 export const useAuthStore = create((set, get) => ({
