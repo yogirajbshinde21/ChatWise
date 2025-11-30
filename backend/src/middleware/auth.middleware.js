@@ -10,7 +10,19 @@ export const protectRoute = async (req,res,next) => {   // 'next' parameter refe
     try{
         const token = req.cookies.jwt;
 
+        // Debug logging for production troubleshooting
+        if (process.env.NODE_ENV === "production") {
+            console.log("🔐 Auth Check:", {
+                hasToken: !!token,
+                hasCookies: !!req.cookies,
+                cookieKeys: Object.keys(req.cookies),
+                origin: req.get('origin'),
+                referer: req.get('referer')
+            });
+        }
+
         if(!token){
+            console.log("❌ No JWT token found in cookies");
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 

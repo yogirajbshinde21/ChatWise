@@ -24,6 +24,12 @@ dotenv.config();
 const PORT = process.env.PORT || 5001;  // This is the port on which your server will run. If PORT is not defined in .env, it will default to 5001.
 
 const __dirname = path.resolve();  // This is used to get the current directory path, which is useful for serving static files.
+
+// Trust proxy - Required for Render.com to properly handle secure cookies
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
+
 // app.use() is a method used to set up middleware in your Express app.
 // - For e.g. Whenever a request comes in from the client, use this function or feature.
 
