@@ -3,7 +3,8 @@ import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { Socket } from "socket.io";
-import { io } from "../lib/socket.js";  
+import { io } from "../lib/socket.js";
+import { generateRandomAvatar } from "../lib/avatarGenerator.js";  
 
 
 export const signup = async (req,res) => {
@@ -35,10 +36,14 @@ export const signup = async (req,res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password,salt);
 
+        // Generate a random cartoon avatar for the new user
+        const defaultAvatar = generateRandomAvatar(email);
+
         const newUser = new User({
             fullName: fullName,
             email:email,
-            password: hashedPassword
+            password: hashedPassword,
+            profilePic: defaultAvatar
         });
 
 

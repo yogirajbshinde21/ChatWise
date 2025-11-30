@@ -21,8 +21,156 @@ import { useEffect, useRef, useState } from "react";
 import { useGroupStore } from "../store/useGroupStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
-import { Users, Send, Image as ImageIcon, Crown, UserPlus, UserMinus, Settings, X, ArrowLeft } from "lucide-react";
+import { Users, Send, Image as ImageIcon, Crown, UserPlus, UserMinus, Settings, X, ArrowLeft, Sparkles, Info } from "lucide-react";
 import { formatMessageTime } from "../lib/utils";
+
+// Custom CSS for Chatty effects
+const chattyStyles = `
+.chatty-input-container {
+  position: relative;
+  padding: 2px;
+  border-radius: 12px;
+  background: linear-gradient(
+    45deg,
+    transparent, transparent, transparent, transparent, 
+    transparent, transparent, transparent, transparent
+  );
+  background-size: 300% 300%;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-property: background, box-shadow, transform;
+}
+
+.chatty-input-container.active {
+  background: linear-gradient(
+    45deg,
+    #8b5cf6, #3b82f6, #06b6d4, #10b981, 
+    #f59e0b, #ef4444, #ec4899, #8b5cf6
+  );
+  background-size: 300% 300%;
+  animation: chatty-border-flow 2s linear infinite;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  transform: scale(1.02);
+}
+
+.chatty-input-container:not(.active) {
+  background: linear-gradient(
+    45deg,
+    rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1), 
+    rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.1), 
+    rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1), 
+    rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1)
+  );
+  background-size: 300% 300%;
+  animation: chatty-border-subtle 4s ease-in-out infinite;
+}
+
+.chatty-input-inner {
+  background: white;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+  font-weight: 500; /* Added medium font weight for better readability */
+  color: #374151; /* Slightly darker text color for better contrast */
+}
+
+.dark .chatty-input-inner {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+
+@keyframes chatty-border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes chatty-border-subtle {
+  0%, 100% {
+    background-position: 0% 50%;
+    opacity: 0.3;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.6;
+  }
+}
+
+.chatty-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: help;
+  transition: all 0.3s ease;
+}
+
+.chatty-hint:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.chatty-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #1f2937;
+  color: white;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.chatty-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #1f2937;
+}
+
+.chatty-hint:hover .chatty-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sparkle-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+`;
 
 const GroupChatRoom = () => {
     const { authUser, socket } = useAuthStore();
@@ -53,19 +201,30 @@ const GroupChatRoom = () => {
     const fileInputRef = useRef(null);
     const seenTimeoutRef = useRef(null);
 
+    // Check if message contains !Chatty for special effects
+    const isChattyMessage = newMessage.toLowerCase().includes('!chatty');
+
+    // Inject custom styles for Chatty effects
+    useEffect(() => {
+        const styleElement = document.createElement('style');
+        styleElement.textContent = chattyStyles;
+        document.head.appendChild(styleElement);
+        
+        return () => {
+            document.head.removeChild(styleElement);
+        };
+    }, []);
+
     // Set up socket connection and real-time subscriptions
     useEffect(() => {
         if (socket) {
             setSocket(socket);
             
-            // Subscribe to group events only once
+            // Subscribe to group events - this ensures events work even in chat room
             const groupStore = useGroupStore.getState();
             groupStore.subscribeToGroupEvents();
 
-            return () => {
-                // Clean up on unmount only
-                groupStore.unsubscribeFromGroupEvents();
-            };
+            console.log("🔄 GroupChatRoom: Socket events subscribed");
         }
     }, [socket, setSocket]);
 
@@ -114,7 +273,7 @@ const GroupChatRoom = () => {
 
                 // Set new timeout for delayed seen marking (2 second delay)
                 seenTimeoutRef.current = setTimeout(() => {
-                    markMessagesAsSeen(newUnseenMessages);
+                    markMessagesAsSeen(selectedGroup._id, newUnseenMessages);
                 }, 2000);
             }
         }
@@ -124,7 +283,7 @@ const GroupChatRoom = () => {
                 clearTimeout(seenTimeoutRef.current);
             }
         };
-    }, [groupMessages, authUser._id, markMessagesAsSeen]);
+    }, [groupMessages, authUser._id, markMessagesAsSeen, selectedGroup._id]);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -221,10 +380,10 @@ const GroupChatRoom = () => {
 
     if (!selectedGroup) {
         return (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex items-center justify-center flex-1">
                 <div className="text-center">
                     <Users className="w-16 h-16 mx-auto mb-4 text-base-content/50" />
-                    <h3 className="font-semibold text-lg mb-2">Select a Group</h3>
+                    <h3 className="mb-2 text-lg font-semibold">Select a Group</h3>
                     <p className="text-base-content/60">
                         Choose a group from the sidebar to start chatting
                     </p>
@@ -234,11 +393,11 @@ const GroupChatRoom = () => {
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full">
+        <div className="flex flex-col flex-1 h-full">
             {/* Group Header - Sticky on mobile */}
-            <div className="border-b border-base-300 p-3 sm:p-4 sticky top-0 bg-base-100 z-10 sm:static sm:z-auto">
+            <div className="sticky top-0 z-10 p-3 border-b border-base-300 sm:p-4 bg-base-100 sm:static sm:z-auto">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex items-center flex-1 min-w-0 gap-3">
                         {/* Back button for mobile */}
                         <button 
                             onClick={() => setSelectedGroup(null)}
@@ -248,23 +407,23 @@ const GroupChatRoom = () => {
                         </button>
                         
                         <div className="relative flex-shrink-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full sm:w-10 sm:h-10 bg-primary/10">
                                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                             </div>
                             {isAdmin && (
-                                <Crown className="w-3 h-3 text-yellow-500 absolute -top-1 -right-1" />
+                                <Crown className="absolute w-3 h-3 text-yellow-500 -top-1 -right-1" />
                             )}
                         </div>
                         
-                        <div className="min-w-0 flex-1">
-                            <h3 className="font-semibold text-sm sm:text-base truncate">{selectedGroup.name}</h3>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold truncate sm:text-base">{selectedGroup.name}</h3>
                             <p className="text-xs sm:text-sm text-base-content/70">
                                 {selectedGroup.members.length} member{selectedGroup.members.length !== 1 ? 's' : ''}
                             </p>
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                    <div className="flex items-center flex-shrink-0 gap-1 sm:gap-2">
                         <button
                             onClick={() => setShowMemberList(true)}
                             className="btn btn-xs sm:btn-sm btn-ghost"
@@ -287,15 +446,15 @@ const GroupChatRoom = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="flex-1 p-3 space-y-3 overflow-y-auto sm:p-4 sm:space-y-4">
                 {isGroupMessagesLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="loading loading-spinner loading-lg"></div>
                     </div>
                 ) : groupMessages.length === 0 ? (
-                    <div className="text-center py-8">
-                        <Users className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-base-content/50" />
-                        <h3 className="font-semibold text-base sm:text-lg mb-2">No Messages Yet</h3>
+                    <div className="py-8 text-center">
+                        <Users className="w-12 h-12 mx-auto mb-4 sm:w-16 sm:h-16 text-base-content/50" />
+                        <h3 className="mb-2 text-base font-semibold sm:text-lg">No Messages Yet</h3>
                         <p className="text-sm sm:text-base text-base-content/60">
                             Start the conversation by sending the first message
                         </p>
@@ -308,7 +467,7 @@ const GroupChatRoom = () => {
                                 className={`chat ${message.senderId._id === authUser._id ? "chat-end" : "chat-start"}`}
                             >
                                 <div className="chat-image avatar">
-                                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+                                    <div className="w-8 h-8 rounded-full sm:w-10 sm:h-10">
                                         <img
                                             src={message.senderId.profilePic || "/avatar.png"}
                                             alt={message.senderId.fullName}
@@ -318,26 +477,30 @@ const GroupChatRoom = () => {
                                 </div>
                                 
                                 <div className="chat-header">
-                                    <span className="text-xs sm:text-sm font-medium">
+                                    <span className="text-xs font-medium sm:text-sm">
                                         {message.senderId.fullName}
                                     </span>
-                                    <time className="text-xs opacity-50 ml-1">
+                                    <time className="ml-1 text-xs opacity-50">
                                         {formatMessageTime(message.createdAt)}
                                     </time>
                                 </div>
                                 
-                                <div className="chat-bubble max-w-xs sm:max-w-md">
+                                <div className={`max-w-xs sm:max-w-md chat-bubble ${
+                                    message.senderId._id === authUser._id 
+                                        ? 'chat-bubble-primary bg-primary text-primary-content' 
+                                        : 'chat-bubble-secondary bg-base-200 text-base-content'
+                                }`}>
                                     {message.image && (
                                         <img
                                             src={message.image}
                                             alt="Shared image"
-                                            className="rounded-lg max-w-full mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                            className="max-w-full mb-2 transition-opacity rounded-lg cursor-pointer hover:opacity-90"
                                             onClick={() => window.open(message.image, '_blank')}
                                         />
                                     )}
                                     {message.text && <p className="text-sm sm:text-base">{message.text}</p>}
                                     {message.isChatty && (
-                                        <div className="badge badge-primary badge-sm mt-1">
+                                        <div className="mt-1 badge badge-accent badge-sm">
                                             Chatty
                                         </div>
                                     )}
@@ -357,18 +520,18 @@ const GroupChatRoom = () => {
                                                             // Find the user in the group members
                                                             const member = selectedGroup.members.find(m => m._id === seenUser.user);
                                                             return member ? (
-                                                                <div key={seenUser.user} className="w-4 h-4 rounded-full border border-base-content/20 overflow-hidden">
+                                                                <div key={seenUser.user} className="w-4 h-4 overflow-hidden border rounded-full border-base-content/20">
                                                                     <img
                                                                         src={member.profilePic || "/avatar.png"}
                                                                         alt={member.fullName}
-                                                                        className="w-full h-full object-cover"
+                                                                        className="object-cover w-full h-full"
                                                                         title={`${member.fullName} - ${new Date(seenUser.seenAt).toLocaleTimeString()}`}
                                                                     />
                                                                 </div>
                                                             ) : null;
                                                         })}
                                                         {message.seenBy.length > 3 && (
-                                                            <div className="w-4 h-4 rounded-full bg-base-300 border border-base-content/20 flex items-center justify-center">
+                                                            <div className="flex items-center justify-center w-4 h-4 border rounded-full bg-base-300 border-base-content/20">
                                                                 <span className="text-xs font-medium">+{message.seenBy.length - 3}</span>
                                                             </div>
                                                         )}
@@ -390,14 +553,14 @@ const GroupChatRoom = () => {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="border-t border-base-300 p-3 sm:p-4">
+            <form onSubmit={handleSendMessage} className="p-3 border-t border-base-300 sm:p-4">
                 {selectedImage && (
                     <div className="mb-3">
                         <div className="relative inline-block">
                             <img
                                 src={selectedImage}
                                 alt="Preview"
-                                className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg"
+                                className="object-cover w-16 h-16 rounded-lg sm:w-20 sm:h-20"
                             />
                             <button
                                 type="button"
@@ -428,20 +591,60 @@ const GroupChatRoom = () => {
                         <ImageIcon className="w-4 h-4" />
                     </button>
                     
-                    <input
-                        type="text"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        className="input input-bordered flex-1 text-sm sm:text-base"
-                    />
+                    {/* !Chatty Feature Hint - Positioned near input */}
+                    <div className="chatty-hint">
+                        <span>?</span>
+                        <div className="chatty-tooltip">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                <span className="font-semibold text-purple-300">!Chatty AI Feature</span>
+                            </div>
+                            <p className="mb-2">Type <span className="px-1 font-mono text-purple-300 bg-gray-800 rounded">!Chatty</span> in your message for AI summaries!</p>
+                            <p className="text-xs text-gray-400">Example: "!Chatty Let's discuss the project"</p>
+                        </div>
+                    </div>
+                    
+                    {/* Enhanced Message Input with Dynamic Chatty Border Effects */}
+                    <div className={`chatty-input-container ${isChattyMessage ? 'active' : ''} flex-1`}>
+                        <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder={isChattyMessage ? "✨ AI-powered message activated! ✨" : "Type a message..."}
+                            className={`chatty-input-inner px-4 py-3 text-sm sm:text-base transition-all duration-300 ${
+                                isChattyMessage 
+                                ? 'placeholder-purple-600 text-gray-800 font-medium' 
+                                : 'placeholder-gray-500'
+                            }`}
+                        />
+                        
+                        {isChattyMessage && (
+                            <div className="absolute z-20 transform -translate-y-1/2 pointer-events-none right-3 top-1/2">
+                                <div className="flex items-center gap-1 px-2 py-1 rounded-full shadow-sm bg-white/80">
+                                    <Sparkles className="w-3 h-3 text-purple-600" />
+                                    <span className="text-xs font-bold text-purple-700">AI</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     
                     <button
                         type="submit"
                         disabled={!newMessage.trim() && !selectedImage}
-                        className="btn btn-primary btn-sm sm:btn-md"
+                        className={`btn btn-sm sm:btn-md transition-all duration-300 ${
+                            isChattyMessage 
+                            ? 'btn-primary bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 border-none text-white shadow-lg hover:shadow-xl transform hover:scale-105' 
+                            : 'btn-primary'
+                        }`}
                     >
-                        <Send className="w-4 h-4" />
+                        {isChattyMessage ? (
+                            <div className="flex items-center gap-1">
+                                <Sparkles className="w-4 h-4" />
+                                <Send className="w-4 h-4" />
+                            </div>
+                        ) : (
+                            <Send className="w-4 h-4" />
+                        )}
                     </button>
                 </div>
             </form>
@@ -449,9 +652,9 @@ const GroupChatRoom = () => {
             {/* Member List Modal */}
             {showMemberList && (
                 <div className="modal modal-open">
-                    <div className="modal-box w-full max-w-md">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg">Group Members</h3>
+                    <div className="w-full max-w-md modal-box">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold">Group Members</h3>
                             <button
                                 onClick={() => setShowMemberList(false)}
                                 className="btn btn-sm btn-ghost"
@@ -460,7 +663,7 @@ const GroupChatRoom = () => {
                             </button>
                         </div>
                         
-                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                        <div className="space-y-3 overflow-y-auto max-h-96">
                             {selectedGroup.members.map((member) => (
                                 <div key={member._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-base-200">
                                     <div className="flex items-center gap-3">
@@ -475,7 +678,7 @@ const GroupChatRoom = () => {
                                         <div>
                                             <p className="font-medium">{member.fullName}</p>
                                             {member._id === selectedGroup.admin._id && (
-                                                <p className="text-xs text-yellow-600 flex items-center gap-1">
+                                                <p className="flex items-center gap-1 text-xs text-yellow-600">
                                                     <Crown className="w-3 h-3" />
                                                     Admin
                                                 </p>
@@ -497,13 +700,13 @@ const GroupChatRoom = () => {
                         </div>
                         
                         {isAdmin && (
-                            <div className="mt-4 pt-4 border-t border-base-300">
+                            <div className="pt-4 mt-4 border-t border-base-300">
                                 <button
                                     onClick={() => {
                                         setShowMemberList(false);
                                         setShowAddMembers(true);
                                     }}
-                                    className="btn btn-primary btn-sm w-full"
+                                    className="w-full btn btn-primary btn-sm"
                                 >
                                     <UserPlus className="w-4 h-4" />
                                     Add More Members
@@ -517,9 +720,9 @@ const GroupChatRoom = () => {
             {/* Group Settings Modal */}
             {showGroupSettings && (
                 <div className="modal modal-open">
-                    <div className="modal-box w-full max-w-md">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg">Group Settings</h3>
+                    <div className="w-full max-w-md modal-box">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold">Group Settings</h3>
                             <button
                                 onClick={() => setShowGroupSettings(false)}
                                 className="btn btn-sm btn-ghost"
@@ -560,7 +763,7 @@ const GroupChatRoom = () => {
                                         setShowGroupSettings(false);
                                         setShowAddMembers(true);
                                     }}
-                                    className="btn btn-primary btn-sm w-full"
+                                    className="w-full btn btn-primary btn-sm"
                                 >
                                     <UserPlus className="w-4 h-4" />
                                     Add Members
@@ -568,7 +771,7 @@ const GroupChatRoom = () => {
                                 
                                 <button
                                     onClick={handleDeleteGroup}
-                                    className="btn btn-error btn-sm w-full"
+                                    className="w-full btn btn-error btn-sm"
                                 >
                                     Delete Group
                                 </button>
@@ -581,9 +784,9 @@ const GroupChatRoom = () => {
             {/* Add Members Modal */}
             {showAddMembers && (
                 <div className="modal modal-open">
-                    <div className="modal-box w-11/12 max-w-md mx-4 sm:mx-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg">Add Members</h3>
+                    <div className="w-11/12 max-w-md mx-4 modal-box sm:mx-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold">Add Members</h3>
                             <button
                                 onClick={() => {
                                     setShowAddMembers(false);
@@ -596,27 +799,27 @@ const GroupChatRoom = () => {
                         </div>
                         
                         <div className="mb-4">
-                            <p className="text-sm text-base-content/70 mb-3">
+                            <p className="mb-3 text-sm text-base-content/70">
                                 Select users to add to the group:
                             </p>
                             
-                            <div className="max-h-60 overflow-y-auto space-y-2 bg-base-50 rounded-lg p-2">
+                            <div className="p-2 space-y-2 overflow-y-auto rounded-lg max-h-60 bg-base-50">
                                 {isUsersLoading ? (
                                     <div className="flex items-center justify-center py-8">
                                         <div className="loading loading-spinner loading-md"></div>
                                         <span className="ml-2 text-sm">Loading users...</span>
                                     </div>
                                 ) : getAvailableUsers().length === 0 ? (
-                                    <div className="text-center py-8 text-base-content/60">
+                                    <div className="py-8 text-center text-base-content/60">
                                         <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                         <p className="text-sm">No users available to add</p>
-                                        <p className="text-xs mt-1">All users are already in this group</p>
+                                        <p className="mt-1 text-xs">All users are already in this group</p>
                                     </div>
                                 ) : (
                                     getAvailableUsers().map((user) => (
                                         <div 
                                             key={user._id} 
-                                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-base-200 cursor-pointer transition-colors border border-base-300/50"
+                                            className="flex items-center gap-3 p-3 transition-colors border rounded-lg cursor-pointer hover:bg-base-200 border-base-300/50"
                                             onClick={() => handleUserToggle(user._id)}
                                         >
                                             <input
@@ -635,8 +838,8 @@ const GroupChatRoom = () => {
                                                 </div>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium truncate text-sm">{user.fullName}</p>
-                                                <p className="text-xs text-base-content/60 truncate">{user.email}</p>
+                                                <p className="text-sm font-medium truncate">{user.fullName}</p>
+                                                <p className="text-xs truncate text-base-content/60">{user.email}</p>
                                             </div>
                                         </div>
                                     ))
@@ -644,7 +847,7 @@ const GroupChatRoom = () => {
                             </div>
                         </div>
                         
-                        <div className="modal-action pt-4 border-t border-base-300">
+                        <div className="pt-4 border-t modal-action border-base-300">
                             <button
                                 onClick={() => {
                                     setShowAddMembers(false);

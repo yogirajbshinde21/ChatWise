@@ -4,7 +4,11 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "add-avatars": "node src/scripts/addDefaultAvatars.js",
+    "check-avatars": "node src/scripts/checkUserAvatars.js",
+    "test-avatar": "node src/scripts/testAvatarSignup.js",
+    "create-demo": "node src/scripts/createDemoAccount.js"
   },
   "keywords": [],
   "author": "",

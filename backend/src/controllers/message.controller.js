@@ -40,8 +40,9 @@ export const getMessages = async(req, res) => {
                 { senderId:userToChatId, receiverId:myId }
 
             ]
-        });
+        }).sort({ createdAt: 1 }); // Sort by creation time (oldest first, newest last)
 
+        console.log(`📨 Fetched ${messages.length} messages between users, sorted chronologically`);
         res.status(200).json(messages);
     } catch (error) {
         console.log("Error in getMessages controller: ", error.message);
@@ -189,6 +190,50 @@ export const markMessagesAsSeen = async(req, res) => {
         for (const message of messages) {
             message.markSeenBy(userId);
             await message.save();
+        }
+
+        // Update group visibility tracking for !Chatty messages
+        const groupVisibilityUpdates = new Map();
+        
+        for (const message of messages) {
+            if (message.groupId && message.isChatty) {
+                const groupId = message.groupId.toString();
+                if (!groupVisibilityUpdates.has(groupId)) {
+                    groupVisibilityUpdates.set(groupId, []);
+                }
+                groupVisibilityUpdates.get(groupId).push(message._id.toString());
+            }
+        }
+
+        // Update group userMessageVisibility for each group
+        for (const [groupId, chattyMessageIds] of groupVisibilityUpdates) {
+            const group = await Group.findById(groupId);
+            if (group) {
+                const userVisibility = group.userMessageVisibility.get(userId.toString()) || {
+                    lastSeenAt: new Date(0),
+                    seenMessageIds: []
+                };
+
+                // Add new seen !Chatty message IDs
+                const newSeenIds = chattyMessageIds.filter(id => !userVisibility.seenMessageIds.includes(id));
+                userVisibility.seenMessageIds.push(...newSeenIds);
+                userVisibility.lastSeenAt = new Date();
+
+                group.userMessageVisibility.set(userId.toString(), userVisibility);
+                await group.save();
+
+                console.log(`📊 Updated group visibility for user ${userId} in group ${group.name}: +${newSeenIds.length} new !Chatty messages seen (total: ${userVisibility.seenMessageIds.length})`);
+                
+                // Emit group summary update to the user who marked messages as seen
+                const userSocketId = getReceiverSocketId(userId);
+                if (userSocketId) {
+                    io.to(userSocketId).emit("groupSummaryUpdate", {
+                        groupId: group._id,
+                        action: "visibilityUpdated",
+                        newSeenCount: newSeenIds.length
+                    });
+                }
+            }
         }
 
         // Emit real-time update for read receipts

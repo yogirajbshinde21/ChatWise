@@ -26,10 +26,25 @@ import ChatContainer from "../components/ChatContainer";
 import GroupChatRoom from "../components/GroupChatRoom";
 
 const HomePage = () => {
-  const { selectedUser } = useChatStore();
-  const { selectedGroup } = useGroupStore();
+  const { selectedUser, setSelectedUser } = useChatStore();
+  const { selectedGroup, setSelectedGroup } = useGroupStore();
   const { socket } = useAuthStore();
   const [activeTab, setActiveTab] = useState("users"); // "users" or "groups"
+
+  // Handle tab switching - clear selections to avoid conflicts
+  const handleTabChange = (tab) => {
+    console.log(`🔄 HomePage: Switching to ${tab} tab`);
+    setActiveTab(tab);
+    
+    // Clear selections when switching tabs to ensure clean state
+    if (tab === "users") {
+      console.log("🧹 HomePage: Clearing selected group for users tab");
+      setSelectedGroup(null);
+    } else if (tab === "groups") {
+      console.log("🧹 HomePage: Clearing selected user for groups tab");
+      setSelectedUser(null);
+    }
+  };
 
   // Set up socket connection for real-time updates
   useEffect(() => {
@@ -38,9 +53,16 @@ const HomePage = () => {
       const { setSocket, subscribeToGroupEvents } = useGroupStore.getState();
       setSocket(socket);
       
-      // Subscribe to group events to ensure real-time updates even when not in GroupChatRoom
-      console.log("🔄 HomePage: Subscribing to group events for real-time updates");
+      // Subscribe to group events to ensure real-time updates everywhere
+      console.log("🔄 HomePage: Setting up global socket event subscriptions");
       subscribeToGroupEvents();
+
+      // Cleanup function to unsubscribe when component unmounts
+      return () => {
+        console.log("🔄 HomePage: Cleaning up socket subscriptions");
+        const { unsubscribeFromGroupEvents } = useGroupStore.getState();
+        unsubscribeFromGroupEvents();
+      };
     }
   }, [socket]);
 
@@ -69,7 +91,7 @@ const HomePage = () => {
                 {/* Tab Navigation */}
                 <div className="flex border-b border-base-300">
                   <button
-                    onClick={() => setActiveTab("users")}
+                    onClick={() => handleTabChange("users")}
                     className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                       activeTab === "users" 
                         ? "text-primary border-b-2 border-primary bg-primary/5" 
@@ -79,7 +101,7 @@ const HomePage = () => {
                     Users
                   </button>
                   <button
-                    onClick={() => setActiveTab("groups")}
+                    onClick={() => handleTabChange("groups")}
                     className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                       activeTab === "groups" 
                         ? "text-primary border-b-2 border-primary bg-primary/5" 

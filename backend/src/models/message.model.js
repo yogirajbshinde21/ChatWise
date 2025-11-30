@@ -70,7 +70,7 @@ messageSchema.pre('save', function(next) {
 
 // Method to check if message contains "!Chatty"
 messageSchema.pre('save', function(next) {
-    if (this.text && this.text.includes('!Chatty')) {
+    if (this.text && this.text.match(/!chatty/i)) {
         this.isChatty = true;
     }
     next();

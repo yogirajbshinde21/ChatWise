@@ -16,7 +16,7 @@
  * - Admin indicators
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useGroupStore } from "../store/useGroupStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { Users, Plus, Crown, MessageCircle, TrendingUp, X } from "lucide-react";
@@ -34,12 +34,13 @@ const GroupList = () => {
         getGroupSummary,
         isGeneratingSummary,
         markSummaryAsRead,
+        lastSummaryUpdate,
     } = useGroupStore();
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [summaryGroup, setSummaryGroup] = useState(null);
-    const [summaryMode, setSummaryMode] = useState("previousDay");
+    const [summaryMode, setSummaryMode] = useState("unseenMessages");
     const [summary, setSummary] = useState(null);
     const [newGroupData, setNewGroupData] = useState({
         name: "",
@@ -49,6 +50,14 @@ const GroupList = () => {
     useEffect(() => {
         getUserGroups();
     }, [getUserGroups]);
+
+    // Watch for summary updates and refresh if modal is open for the same group
+    useEffect(() => {
+        if (lastSummaryUpdate > 0 && showSummaryModal && summaryGroup) {
+            console.log("🔄 Summary update detected, refreshing summary for group:", summaryGroup.name);
+            handleViewSummary(summaryGroup);
+        }
+    }, [lastSummaryUpdate, showSummaryModal, summaryGroup]);
 
     const handleCreateGroup = async (e) => {
         e.preventDefault();
@@ -67,28 +76,42 @@ const GroupList = () => {
         }
     };
 
-    const handleViewSummary = async (group) => {
+    const handleViewSummary = useCallback(async (group) => {
         setSummaryGroup(group);
         setShowSummaryModal(true);
         
         try {
-            const summaryData = await getGroupSummary(group._id, summaryMode);
+            // The new API returns all three categories in one call
+            const summaryData = await getGroupSummary(group._id);
             setSummary(summaryData);
         } catch {
             // Error handled in store
         }
-    };
+    }, [getGroupSummary]);
 
     const handleSummaryModeChange = async (mode) => {
+        // Mode switching is now handled within the summary data
+        // No need to make separate API calls for different modes
         setSummaryMode(mode);
-        if (summaryGroup) {
-            try {
-                const summaryData = await getGroupSummary(summaryGroup._id, mode);
-                setSummary(summaryData);
-            } catch {
-                // Error handled in store
-            }
-        }
+    };
+
+    // Get the current mode's summary data
+    const getCurrentSummaryData = () => {
+        if (!summary || !summary.summaries) return null;
+        
+        const currentSummary = summary.summaries[summaryMode];
+        const currentCount = summary.counts[summaryMode];
+        
+        if (!currentSummary) return null;
+        
+        return {
+            summary: currentSummary.text,
+            messageCount: currentCount,
+            period: summaryMode,
+            summaryCount: 1,
+            isFromHistory: currentSummary.isFromCache || false,
+            generatedAt: currentSummary.generatedAt
+        };
     };
 
     if (isGroupsLoading) {
@@ -272,7 +295,7 @@ const GroupList = () => {
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold">Group Summary</h3>
                             <div className="flex items-center gap-2">
-                                {summary && summaryMode === "sinceLastSeen" && (
+                                {summary && summaryMode === "unseenMessages" && summary.counts?.unseenMessages > 0 && (
                                     <button
                                         onClick={async () => {
                                             try {
@@ -307,16 +330,37 @@ const GroupList = () => {
                                 
                                 <div className="mb-4 tabs tabs-boxed">
                                     <button
+                                        className={`tab ${summaryMode === "unseenMessages" ? "tab-active" : ""}`}
+                                        onClick={() => handleSummaryModeChange("unseenMessages")}
+                                    >
+                                        Unseen Messages
+                                        {summary?.counts?.[summaryMode] && (
+                                            <span className="ml-2 badge badge-primary badge-sm">
+                                                {summary.counts[summaryMode]}
+                                            </span>
+                                        )}
+                                    </button>
+                                    <button
+                                        className={`tab ${summaryMode === "seenMessages" ? "tab-active" : ""}`}
+                                        onClick={() => handleSummaryModeChange("seenMessages")}
+                                    >
+                                        Seen Messages
+                                        {summary?.counts?.[summaryMode] && (
+                                            <span className="ml-2 badge badge-secondary badge-sm">
+                                                {summary.counts[summaryMode]}
+                                            </span>
+                                        )}
+                                    </button>
+                                    <button
                                         className={`tab ${summaryMode === "previousDay" ? "tab-active" : ""}`}
                                         onClick={() => handleSummaryModeChange("previousDay")}
                                     >
                                         Previous Day
-                                    </button>
-                                    <button
-                                        className={`tab ${summaryMode === "sinceLastSeen" ? "tab-active" : ""}`}
-                                        onClick={() => handleSummaryModeChange("sinceLastSeen")}
-                                    >
-                                        Since Last Seen
+                                        {summary?.counts?.[summaryMode] && (
+                                            <span className="ml-2 badge badge-accent badge-sm">
+                                                {summary.counts[summaryMode]}
+                                            </span>
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -330,63 +374,41 @@ const GroupList = () => {
                                 </div>
                             ) : summary ? (
                                 <div>
-                                    <div className="flex items-center gap-2 mb-3 text-sm text-base-content/70">
-                                        <TrendingUp className="w-4 h-4" />
-                                        <span>
-                                            {summary.messageCount} messages • {summary.period}
-                                            {summary.summaryCount > 1 && (
-                                                <span className="ml-2 badge badge-primary badge-sm">
-                                                    {summary.summaryCount} updates
-                                                </span>
-                                            )}
-                                            {summary.isFromHistory && (
-                                                <span className="ml-2 badge badge-secondary badge-sm">
-                                                    From history
-                                                </span>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm leading-relaxed">
-                                        {summary.summaryCount > 1 ? (
-                                            // Multiple updates - render with proper formatting
-                                            <div className="space-y-4">
-                                                {summary.summary.split('\n\n---\n\n').map((updateSection, index) => (
-                                                    <div key={index} className="p-3 border-l-4 border-primary/30 bg-base-100 rounded-r-lg">
-                                                        {updateSection.split('\n').map((line, lineIndex) => {
-                                                            if (line.startsWith('**Update')) {
-                                                                // Extract update header
-                                                                const headerMatch = line.match(/\*\*Update (\d+)\*\* \(([^)]+)\):/);
-                                                                if (headerMatch) {
-                                                                    return (
-                                                                        <div key={lineIndex} className="mb-2">
-                                                                            <span className="font-semibold text-primary">
-                                                                                Update {headerMatch[1]}
-                                                                            </span>
-                                                                            <span className="ml-2 text-xs text-base-content/60">
-                                                                                {headerMatch[2]}
-                                                                            </span>
-                                                                        </div>
-                                                                    );
-                                                                }
-                                                                return null;
-                                                            } else if (line.trim()) {
-                                                                // Regular content line
-                                                                return (
-                                                                    <div key={lineIndex} className="mb-1">
-                                                                        {line}
-                                                                    </div>
-                                                                );
-                                                            }
-                                                            return null;
-                                                        })}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            // Single update - render normally
-                                            <div className="whitespace-pre-wrap">{summary.summary}</div>
-                                        )}
-                                    </div>
+                                    {(() => {
+                                        const currentSummaryData = getCurrentSummaryData();
+                                        if (!currentSummaryData) {
+                                            return (
+                                                <div className="py-8 text-center text-base-content/60">
+                                                    <TrendingUp className="w-12 h-12 mx-auto mb-2" />
+                                                    <p>No {summaryMode.replace(/([A-Z])/g, ' $1').toLowerCase()} available</p>
+                                                </div>
+                                            );
+                                        }
+                                        
+                                        return (
+                                            <>
+                                                <div className="flex items-center gap-2 mb-3 text-sm text-base-content/70">
+                                                    <TrendingUp className="w-4 h-4" />
+                                                    <span>
+                                                        {currentSummaryData.messageCount} messages • {currentSummaryData.period.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                                                        {currentSummaryData.summaryCount > 1 && (
+                                                            <span className="ml-2 badge badge-primary badge-sm">
+                                                                {currentSummaryData.summaryCount} updates
+                                                            </span>
+                                                        )}
+                                                        {currentSummaryData.isFromHistory && (
+                                                            <span className="ml-2 badge badge-secondary badge-sm">
+                                                                From cache
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <div className="text-sm leading-relaxed">
+                                                    <div className="whitespace-pre-wrap">{currentSummaryData.summary}</div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             ) : (
                                 <div className="py-8 text-center text-base-content/60">

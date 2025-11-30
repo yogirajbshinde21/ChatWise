@@ -41,6 +41,44 @@ const groupSchema = new mongoose.Schema(
         groupImage: {
             type: String,
             default: ""
+        },
+        // Store generated summaries with their associated messages
+        summaries: [{
+            id: {
+                type: String,
+                required: true
+            },
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true
+            },
+            messageIds: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Message"
+            }],
+            summaryText: {
+                type: String,
+                required: true
+            },
+            generatedAt: {
+                type: Date,
+                default: Date.now
+            },
+            period: {
+                type: String,
+                enum: ['previousDay', 'unseenMessages', 'seenMessages', 'batch'],
+                required: true
+            }
+        }],
+        // Track per-user message visibility
+        userMessageVisibility: {
+            type: Map,
+            of: {
+                lastSeenAt: Date,
+                seenMessageIds: [mongoose.Schema.Types.ObjectId]
+            },
+            default: new Map()
         }
     },
     { 

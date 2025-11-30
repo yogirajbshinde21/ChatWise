@@ -86,7 +86,18 @@ export const useChatStore = create((set, get) => ({
     },
 
 // Optimize this one later
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => {
+    console.log(`🎯 ChatStore: Setting selected user to:`, selectedUser?.fullName || 'null');
+    
+    // Clear any selected group when selecting a user to avoid conflicts
+    if (selectedUser) {
+        console.log("🧹 ChatStore: Clearing selected group due to user selection");
+        import('./useGroupStore').then(({ useGroupStore }) => {
+            useGroupStore.getState().setSelectedGroup(null);
+        });
+    }
+    set({ selectedUser });
+  },
 
 
 }));

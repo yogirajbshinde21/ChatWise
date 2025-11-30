@@ -124,6 +124,19 @@ export const useAuthStore = create((set, get) => ({
                 });
             }
         });
+
+        // Set socket in group store and subscribe to group events immediately
+        console.log("🔄 AuthStore: Setting up group socket events globally");
+        try {
+            // Use dynamic import to avoid circular dependency
+            import("./useGroupStore.js").then(({ useGroupStore }) => {
+                const { setSocket, subscribeToGroupEvents } = useGroupStore.getState();
+                setSocket(socket);
+                subscribeToGroupEvents();
+            });
+        } catch (error) {
+            console.log("⚠️ Could not set up group socket events:", error);
+        }
     },
 
     disconnectSocket: () => {
