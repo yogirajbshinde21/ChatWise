@@ -6,25 +6,28 @@ export const generateToken = (userId, res) => {
         expiresIn: "7d"
     });
 
+    const isProduction = process.env.NODE_ENV === "production";
+
     const cookieOptions = {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProduction ? "none" : "strict",
+        secure: isProduction,
         path: '/',
-        // Don't set domain - let browser handle it automatically for cross-origin
     };
 
     // Log for debugging
-    if (process.env.NODE_ENV === "production") {
+    if (isProduction) {
         console.log("🍪 Setting secure cookie for production");
         console.log("🍪 Cookie options:", cookieOptions);
     }
 
+    // Set the cookie
     res.cookie("jwt", token, cookieOptions);
 
-    // Also set the token in a custom header as backup
-    res.setHeader('X-Auth-Token', token);
+    // CRITICAL FIX: Also return token in response body as backup
+    // This allows frontend to store in localStorage if cookies fail
+    res.locals.token = token;
 
     console.log("🍪 Cookie set successfully");
 

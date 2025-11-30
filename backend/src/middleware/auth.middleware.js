@@ -8,25 +8,33 @@ export const protectRoute = async (req,res,next) => {   // 'next' parameter refe
     // Authentication logic
 
     try{
-        const token = req.cookies.jwt;
+        // Try to get token from cookie first, then from Authorization header
+        let token = req.cookies.jwt;
+        
+        // If no cookie, check Authorization header
+        if (!token) {
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                token = authHeader.substring(7); // Remove 'Bearer ' prefix
+            }
+        }
 
         // Debug logging for production troubleshooting
         if (process.env.NODE_ENV === "production") {
             console.log("🔐 Auth Check:", {
                 hasToken: !!token,
+                tokenSource: req.cookies.jwt ? 'cookie' : (req.headers.authorization ? 'header' : 'none'),
                 hasCookies: !!req.cookies,
                 cookieKeys: Object.keys(req.cookies),
-                allCookies: req.cookies,
+                hasAuthHeader: !!req.headers.authorization,
                 rawCookieHeader: req.headers.cookie,
                 origin: req.get('origin'),
-                referer: req.get('referer'),
-                userAgent: req.get('user-agent')?.substring(0, 50)
+                referer: req.get('referer')
             });
         }
 
         if(!token){
-            console.log("❌ No JWT token found in cookies");
-            console.log("📋 All request headers:", JSON.stringify(req.headers, null, 2));
+            console.log("❌ No JWT token found in cookies or Authorization header");
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 
