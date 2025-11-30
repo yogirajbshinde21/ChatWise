@@ -17,6 +17,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { app, server} from "./lib/socket.js";
 import path from "path";  // This is used to serve static files like images, videos, etc. in Express.js
+import mongoose from "mongoose";  // For health check database status
 
 dotenv.config();
 // const app = express();   // delete this, as we have already imported this in socket.js
@@ -48,6 +49,45 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: ["set-cookie"]
 }));
+
+// Health check endpoint - Ideal for UptimeRobot monitoring
+// This endpoint verifies that the server is running and database is connected
+app.get("/health", async (req, res) => {
+    try {
+        // Check MongoDB connection status
+        const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+        
+        if (dbStatus !== "connected") {
+            return res.status(503).json({
+                status: "unhealthy",
+                message: "Database disconnected",
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        res.status(200).json({
+            status: "healthy",
+            message: "Server is running and database is connected",
+            database: dbStatus,
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime()
+        });
+    } catch (error) {
+        res.status(503).json({
+            status: "unhealthy",
+            message: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Simple ping endpoint - Lightweight, no database check
+app.get("/ping", (req, res) => {
+    res.status(200).json({ 
+        message: "pong",
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Test route to verify backend is working
 app.get("/api/test", (req, res) => {
