@@ -16,13 +16,17 @@ export const protectRoute = async (req,res,next) => {   // 'next' parameter refe
                 hasToken: !!token,
                 hasCookies: !!req.cookies,
                 cookieKeys: Object.keys(req.cookies),
+                allCookies: req.cookies,
+                rawCookieHeader: req.headers.cookie,
                 origin: req.get('origin'),
-                referer: req.get('referer')
+                referer: req.get('referer'),
+                userAgent: req.get('user-agent')?.substring(0, 50)
             });
         }
 
         if(!token){
             console.log("❌ No JWT token found in cookies");
+            console.log("📋 All request headers:", JSON.stringify(req.headers, null, 2));
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 

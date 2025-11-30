@@ -12,21 +12,21 @@ export const generateToken = (userId, res) => {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         secure: process.env.NODE_ENV === "production",
         path: '/',
+        // Don't set domain - let browser handle it automatically for cross-origin
     };
 
-    // Add domain for production to allow cross-subdomain cookies
+    // Log for debugging
     if (process.env.NODE_ENV === "production") {
-        // Don't set domain - let browser handle it automatically
         console.log("🍪 Setting secure cookie for production");
+        console.log("🍪 Cookie options:", cookieOptions);
     }
 
     res.cookie("jwt", token, cookieOptions);
 
-    console.log("🍪 Cookie set:", {
-        sameSite: cookieOptions.sameSite,
-        secure: cookieOptions.secure,
-        httpOnly: cookieOptions.httpOnly
-    });
+    // Also set the token in a custom header as backup
+    res.setHeader('X-Auth-Token', token);
+
+    console.log("🍪 Cookie set successfully");
 
     return token;
 
