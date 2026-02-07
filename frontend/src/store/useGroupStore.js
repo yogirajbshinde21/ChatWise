@@ -370,6 +370,12 @@ export const useGroupStore = create((set, get) => ({
 
         // Listen for new group messages - FIXED FOR REAL-TIME UPDATES
         socket.on("newGroupMessage", (message) => {
+            // Measure WebSocket delivery latency
+            if (message._serverEmitTs) {
+                const latencyMs = Date.now() - message._serverEmitTs;
+                console.log(`⚡ Group WebSocket delivery latency: ${latencyMs}ms (msgId: ${message._id})`);
+            }
+
             console.log("📢 New group message received:", {
                 messageId: message._id,
                 groupId: message.groupId,

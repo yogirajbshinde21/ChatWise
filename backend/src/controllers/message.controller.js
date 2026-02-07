@@ -105,7 +105,11 @@ export const sendMessage = async(req, res) => {
         // Real-time functionality with socket.io
         const receiverSocketId = getReceiverSocketId(receiverId);
         if (receiverSocketId) {
-            io.to(receiverSocketId).emit("newMessage", newMessage);
+            // Attach server emit timestamp for latency measurement
+            const messagePayload = newMessage.toObject();
+            messagePayload._serverEmitTs = Date.now();
+            io.to(receiverSocketId).emit("newMessage", messagePayload);
+            console.log(`⚡ WebSocket emit for msg ${newMessage._id} at ${messagePayload._serverEmitTs}`);
         }
 
         res.status(201).json(newMessage);
@@ -156,11 +160,13 @@ export const sendGroupMessage = async(req, res) => {
 
         // Real-time functionality - emit to all group members
         console.log("🔄 Emitting message to group members:", group.members.length, "members");
+        const groupPayload = populatedMessage.toObject();
+        groupPayload._serverEmitTs = Date.now();
         group.members.forEach(memberId => {
             const memberSocketId = getReceiverSocketId(memberId);
             if (memberSocketId) {
                 console.log("📤 Emitting to member:", memberId.toString());
-                io.to(memberSocketId).emit("newGroupMessage", populatedMessage);
+                io.to(memberSocketId).emit("newGroupMessage", groupPayload);
             } else {
                 console.log("⚠️ Member not online:", memberId.toString());
             }

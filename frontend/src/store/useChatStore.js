@@ -60,6 +60,12 @@ export const useChatStore = create((set, get) => ({
         if (!socket) return;
 
         socket.on("newMessage", (newMessage) => {
+            // Measure WebSocket delivery latency
+            if (newMessage._serverEmitTs) {
+                const latencyMs = Date.now() - newMessage._serverEmitTs;
+                console.log(`⚡ WebSocket delivery latency: ${latencyMs}ms (msgId: ${newMessage._id})`);
+            }
+
             const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
             if (!isMessageSentFromSelectedUser) return;
 
